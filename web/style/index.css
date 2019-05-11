@@ -1,0 +1,33 @@
+body{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100vw;
+  height: 100vh;
+  margin: 0 0;
+}
+
+.nav{
+  flex: 1;
+  background-color: black;
+  overflow: hidden;
+}
+
+.closed{
+  flex: 0;
+  background-color: aliceblue;
+  overflow: hidden;
+}
+
+.main{
+  flex: 5;
+  background-color: cornflowerblue;
+}
+
+
+
+
+.device{
+  display: flex;
+  justify-content: space-around;
+}
