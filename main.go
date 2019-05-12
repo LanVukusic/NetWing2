@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 
+	"./handlers"
 	"./helpers"
 	"./midicode"
 
@@ -18,7 +19,8 @@ func main() {
 	runtime.LockOSThread()
 	var err error
 	midicode.Drv, err = driver.New()
-	helpers.Must(err)
+	handlers.Must(err)
+	defer midicode.Drv.Close()
 
 	fmt.Println("On start", midicode.GetMIdiDevices())
 

@@ -2,8 +2,9 @@ package helpers
 
 import (
 	"encoding/json"
-	"log"
+	"strconv"
 
+	"../handlers"
 	"../midicode"
 	"github.com/zserge/webview"
 )
@@ -15,7 +16,7 @@ func HandleRPC(w webview.WebView, data string) {
 		Value string `json:"value"`
 	}{}
 	if err := json.Unmarshal([]byte(data), &cmd); err != nil {
-		log.Println(err)
+		handlers.Must(err)
 		return
 	}
 
@@ -24,10 +25,15 @@ func HandleRPC(w webview.WebView, data string) {
 		Alert(w, cmd.Value)
 
 	case "refresh_midi_devices":
-		/* fmt.Println(drv.Ins()) */
-		//fmt.Println("okey js klice nazaj kar je ql")
 		midicode.SendMIDIdevices(w, midicode.GetMIdiDevices())
-		//fmt.Println(getMIdiDevices(drv))
+
+	case "clear_midi_devices":
+		w.Eval("clearDevices();")
+
+	case "listen_debug_midi_devices":
+		i, err := strconv.Atoi(cmd.Value)
+		handlers.Must(err)
+		midicode.ListenMidi(i)
 	}
 
 }
@@ -35,11 +41,4 @@ func HandleRPC(w webview.WebView, data string) {
 // Alert creates an "alert" windows on the UI
 func Alert(w webview.WebView, text string) {
 	w.Eval("alert('" + text + "')")
-}
-
-// Must is an error handler
-func Must(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
 }

@@ -5,6 +5,3 @@ function addDevice (id, name){
 function clearDevices (){
   $(".devices").html("");
 }
-
-
-addDevice (1, "name")
