@@ -31,3 +31,7 @@ body{
   display: flex;
   justify-content: space-around;
 }
+
+.edit_field{
+  width: 100vw;
+}

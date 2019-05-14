@@ -1,10 +1,10 @@
 package midicode
 
 import (
-	"fmt"
 	"strconv"
 
 	"../handlers"
+	"../osclib"
 
 	"github.com/gomidi/connect"
 	"github.com/zserge/webview"
@@ -74,5 +74,6 @@ func StopListenMidi(id int) {
 }
 
 func handleMIDIevent(data []byte, deltaMicroseconds int64) {
-	fmt.Println(data)
+	//fmt.Println(data)
+	osclib.SendOSC(int(data[1]), int(data[2]))
 }
