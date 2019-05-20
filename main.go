@@ -25,11 +25,11 @@ func main() {
 	defer midicode.Drv.Close()
 
 	fmt.Println("Starting OSC")
-	osclib.StartOSCserver()
+	osclib.StartOSCServer()
 
 	// web view settings
 	var rootDirectory, _ = os.Getwd()
-	w := webview.New(webview.Settings{
+	handlers.W = webview.New(webview.Settings{
 		Width:                  800,
 		Height:                 600,
 		Title:                  "NetWing",
@@ -38,6 +38,6 @@ func main() {
 		Resizable:              true,
 	})
 
-	defer w.Exit()
-	w.Run()
+	defer handlers.W.Exit()
+	handlers.W.Run()
 }

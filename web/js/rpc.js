@@ -19,7 +19,8 @@ $(
   }),
 
   $("#listen_midi_devices").click(function(){
-    rpc.invoke({type:"listen_debug_midi_devices", value:"0"});  // GET THE RIGHT DEVICE ID IN!!!!
+    rpc.invoke({type:"listen_debug_midi_devices", value:"3"});  // GET THE RIGHT DEVICE ID IN!!!!
   })
+
 );
 

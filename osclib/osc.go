@@ -20,7 +20,7 @@ func SendOSC(channel int, value int) {
 	fmt.Println(channel, value)
 }
 
-// StartOSCserver sdasd
-func StartOSCserver() {
+// StartOSCServer starts OSC server and waits for connection
+func StartOSCServer() {
 	OscClient = *osc.NewClient("192.168.1.8", 1234)
 }

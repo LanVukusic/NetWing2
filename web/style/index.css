@@ -1,37 +1,97 @@
-body{
+@font-face {
+  font-family: roboto;
+  src: url(RobotoMono-Regular.ttf);
+}
+
+@font-face {
+  font-family: roboto-bold;
+  src: url(RobotoMono-Bold.ttf);
+}
+
+body {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   margin: 0 0;
+  font-family: roboto;
 }
+
 
 .nav{
-  flex: 1;
-  background-color: black;
-  overflow: hidden;
-}
-
-.closed{
-  flex: 0;
-  background-color: aliceblue;
-  overflow: hidden;
-}
-
-.main{
-  flex: 5;
-  background-color: cornflowerblue;
-}
-
-
-
-
-.device{
+  font-family: roboto-bold;
+  background-color: #282f44;
+  padding: 10px 50px;
+  color: #f5d061;
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  flex:1;
 }
 
-.edit_field{
-  width: 100vw;
+.nav_title{
+  font-size: 3em;
+}
+
+
+
+.up {
+  background-color: #282f44;
+  flex: 10;
+  display: flex;
+  flex-direction: row;
+}
+
+
+
+
+.divider_horizontal {
+  height: 7px;
+  background-color: #e6af2e;
+}
+
+
+
+
+.cli {
+  background-color: #282f44;
+  flex: 2;
+  overflow-y: scroll;
+  font-size: 1.1em;
+  color: white;
+}
+
+.cli_line {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: row;
+}
+
+.err_ok{
+  border-left: solid 10px #61f57a;
+}
+.err_warn{
+  border-left: solid 10px #f5d061;
+}
+.err_err{
+  border-left: solid 10px #f56161;
+}
+
+.cli_body {
+  opacity: 0.70;
+  
+}
+
+.cli_type {
+  margin-right: 20px;
+  
+}
+.cli_time_stamp {
+ margin:0 15px;
+ opacity: 0.6;
+}
+
+
+.main {
+  flex: 5;
+  background-color: #282f44;
 }
