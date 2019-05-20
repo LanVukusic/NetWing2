@@ -7,7 +7,8 @@ var rpc = {
 
 $(
   $("#submit").click(function(){
-    rpc.invoke({type:"alert" , value:$("#ins").val()});
+    //rpc.invoke({type:"alert" , value:$("#ins").val()});
+    cliLog (1, "alert", $("#ins").val())
   }),
   
   $("#refresh_midi_devices").click(function(){
