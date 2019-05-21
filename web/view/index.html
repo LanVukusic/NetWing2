@@ -2,6 +2,10 @@
 
 <head>
   <link rel="stylesheet" href="../style/index.css">
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.css" />
+  <script type="text/javascript" src='//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.js'></script>
+  <script type="text/javascript" src='//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.jQueryUI.min.js'>
+  </script>
 </head>
 
 <body>
@@ -11,8 +15,17 @@
   </div>
 
   <div class="up">
+    <div class="side">
+      <div class="side_block">
+        Interfaces
+      </div>
+      <div class="side_block">
+        Links
+      </div>
+    </div>
+
     <div class="main">
-      <input type="text" id="ins">
+      <!-- <input type="text" id="ins">
       <button id="submit">Submit</button>
       <button id="refresh_midi_devices">get devices</button>
       <button id="clear_midi_devices">clear devices</button>
@@ -20,18 +33,43 @@
       <ul class="devices">
       </ul>
       <div class="edit_field">
-      </div>
+      </div> -->
     </div>
+
   </div>
 
   <div class="divider_horizontal"></div>
 
   <div class="cli">
-    <!-- <div class="cli_line">
+    <div class="cli_line err_ok">
       <div class="cli_time_stamp">21:44:05.07</div>
       <div class="cli_type"> MIDI interf.</div>
       <div class="cli_body">Listening to midi device started: device 0</div>
-    </div> -->
+    </div>
+
+    <div class="cli_line err_err">
+      <div class="cli_time_stamp">21:44:05.07</div>
+      <div class="cli_type"> MIDI interf.</div>
+      <div class="cli_body">Listening to midi device started: device 0</div>
+    </div>
+
+    <div class="cli_line err_warn">
+      <div class="cli_time_stamp">21:44:05.07</div>
+      <div class="cli_type"> MIDI interf.</div>
+      <div class="cli_body">Listening to midi device started: device 0</div>
+    </div>
+
+    <div class="cli_line err_warn">
+      <div class="cli_time_stamp">21:44:05.07</div>
+      <div class="cli_type"> MIDI interf.</div>
+      <div class="cli_body">Listening to midi device started: device 0</div>
+    </div>
+
+    <div class="cli_line err_ok">
+      <div class="cli_time_stamp">21:44:05.07</div>
+      <div class="cli_type"> MIDI interf.</div>
+      <div class="cli_body">Listening to midi device started: device 0</div>
+    </div>
   </div>
 
 </body>

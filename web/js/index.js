@@ -9,7 +9,9 @@ function clearDevices (){
 function cliLog (level, type, msg){
   let time = new Date()
   let timeFormated = time.getHours()+":"+time.getMinutes()+":"+time.getSeconds()+"."+time.getMilliseconds().toString()
+  let cli = $(".cli")
   let message = $('<div class="cli_line"><div class="cli_time_stamp">'+timeFormated+'</div><div class="cli_type">'+type+'</div><div class="cli_body">'+msg+'</div></div>');
+  
   if(level == 0){
     //ok
     message.addClass("err_ok");
@@ -21,5 +23,6 @@ function cliLog (level, type, msg){
     //error
     message.addClass("err_err");
   }
-  $(".cli").append(message);
+  cli.append(message);
+  cli.scrollTop(cli.prop("scrollHeight"))
 }
