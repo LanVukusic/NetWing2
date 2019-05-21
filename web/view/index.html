@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 
 <head>
+  <link rel="stylesheet" href="../static/jquery.gridster.min.css" />
   <link rel="stylesheet" href="../style/index.css">
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.css" />
-  <script type="text/javascript" src='//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.min.js'></script>
-  <script type="text/javascript" src='//cdnjs.cloudflare.com/ajax/libs/gridstack.js/0.4.0/gridstack.jQueryUI.min.js'>
-  </script>
 </head>
 
 <body>
@@ -16,25 +13,31 @@
 
   <div class="up">
     <div class="side">
-      <div class="side_block">
+      <div class="side_block block_active">
         Interfaces
       </div>
       <div class="side_block">
         Links
       </div>
+      <div class="side_block">
+        Devices
+      </div>
+      <div class="side_block">
+        Errors
+      </div>
+      <div class="side_block">
+        Views
+      </div>
     </div>
 
     <div class="main">
-      <!-- <input type="text" id="ins">
-      <button id="submit">Submit</button>
-      <button id="refresh_midi_devices">get devices</button>
-      <button id="clear_midi_devices">clear devices</button>
-      <button id="listen_midi_devices">Listen to midi device 0</button>
-      <ul class="devices">
-      </ul>
-      <div class="edit_field">
-      </div> -->
+      <div class="main_window main_interfaces gridster">
+        
+      </div>
+
+
     </div>
+  </div>
 
   </div>
 
@@ -73,8 +76,9 @@
   </div>
 
 </body>
-
-</html>
-<script src="../js/jquerry.js"></script>
+<script src="../static/jquerry.js"></script>
+<script src="../static/jquery.gridster.min.js"></script>
 <script src="../js/index.js"></script>
 <script src="../js/rpc.js"></script>
+
+</html>
