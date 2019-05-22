@@ -24,6 +24,13 @@ $(
   }),
 
   $(".side_block").click(function(){
+    // update main look
+    $('.main_window').each(function(i, obj) {
+      $(obj).addClass("none")
+    });
+    $(".main_"+$(this).text().toString().toLowerCase()).removeClass("none")
+
+    //update menu look
     $('.side_block').each(function(i, obj) {
       $(obj).removeClass("block_active")
     });
