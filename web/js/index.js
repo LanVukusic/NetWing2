@@ -26,6 +26,8 @@ function cliLog(level, type, msg) {
   cli.scrollTop(cli.prop("scrollHeight"))
 }
 
+
+
 let gridSize = 30
 console.log($(".gridster").width());
 console.log($(".gridster").height());
