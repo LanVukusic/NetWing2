@@ -42,3 +42,7 @@ func HandleRPC(w webview.WebView, data string) {
 func Alert(w webview.WebView, text string) {
 	w.Eval("alert('" + text + "')")
 }
+
+
+
+

@@ -17,6 +17,17 @@ body {
   font-family: roboto;
 }
 
+input{
+  font-family: roboto;
+  border: none;
+  padding: 7px 15px;
+  background-color: rgba(255, 255, 255, 0.0);
+  /* border-bottom: #f5d061 2px solid; */
+  border-bottom: rgba(255, 255, 255, 0.788) 2px solid;
+  color: rgba(255, 255, 255, 0.788);
+  font-size: 100%;
+}
+
 button{
   font-family: roboto;
   font-size: 130%;
@@ -24,7 +35,11 @@ button{
   color: #f5d061;
   background-color: rgba(0, 0, 0, 0);
   border: 2px solid #f5d061;
-  
+  cursor: pointer;
+}
+button:hover{
+  color: rgba(255, 255, 255, 0.562);
+  border: 2px solid rgba(255, 255, 255, 0.562);
 }
 
 .none {
@@ -306,4 +321,91 @@ button{
 .cli_time_stamp {
   margin: 0 15px;
   opacity: 0.6;
+}
+
+
+.modal{
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(245, 208, 97, 0.22);
+}
+
+.window{
+  width: 80vw;
+  height: 80vh;
+  background-color: white;
+  box-shadow: 15px 10px 20px 3px rgba(0,0,0,0.75);
+  background-color: #2b3249;
+  border: #f5d061 solid 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modalNav{
+  flex-grow: 1;
+  background-color: #f5d061;
+  color: #282f44;
+  font-size: 150%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+.modalNav>div{
+  margin: 10px 40px;
+}
+
+.modalBody{
+  background-color: #282f44;
+  flex-grow: 20;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.788);
+}
+
+.modalBody>div{
+  margin: 20px 0;
+  font-size: 130%;
+}
+
+.modalBody>span{
+  margin-top: 50px;
+  margin-bottom: 20px;
+  font-size: 180%;
+  color: #f5d061;
+}
+
+.devList{
+  display: flex;
+  flex-direction: row;
+}
+.devicesTable{
+  margin: 10px 20px;
+  width: 20vw;
+  display: flex;
+  flex-direction: column;
+}
+.devicesTableTitle{
+  font-size: 110%;
+  border-bottom: #f5d061 2px dotted;
+}
+.deviceTableDevice{
+  margin: 4px 4px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  background-color: rgba(235, 222, 183, 0.062)
+}
+.selectedDevice{
+  background-color: rgba(224, 204, 144, 0.432);
 }

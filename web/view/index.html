@@ -38,67 +38,30 @@
               <input type="checkbox" name="" id="">
             </div>
             <div class="inst_back">
-              <div class="title">MIDI device</div>
+              <div class="title">MIDI device -- holder</div>
               <div>LPD8 Akai</div>
             </div>
           </div>
 
-          <div class="interface_inst">
-            <div class="inst_front">
-              <input type="checkbox" name="" id="">
-            </div>
-            <div class="inst_back">
-              <div class="title">MIDI device</div>
-              <div>APC 40 Akai</div>
-            </div>
-          </div>
 
-          <div class="interface_inst">
-            <div class="inst_front">
-              <input type="checkbox" name="" id="">
-            </div>
-            <div class="inst_back">
-              <div class="title">MagicQ OSC</div>
-              <div>Chamsys MQ 80</div>
-            </div>
-          </div>
 
         </div>
         <div class="interfaces_settings doted">
           <div class="settings_nav settings_right">
             Interface settings
             <div>
-              Add interface mode
+              Add wanted interface
             </div>
           </div>
 
           <div class="settings_iterf_inst">
-            <div class="add_front">
+            <div class="add_front" id="addInterfaceGenericMIDI">
               +
             </div>
             <div class="add_back">
               Generic MIDI
             </div>
           </div>
-
-          <div class="settings_iterf_inst">
-            <div class="add_front">
-              +
-            </div>
-            <div class="add_back">
-              Chamsys MagiQ
-            </div>
-          </div>
-
-          <div class="settings_iterf_inst">
-            <div class="add_front">
-              +
-            </div>
-            <div class="add_back">
-              Generic OSC
-            </div>
-          </div>
-
 
         </div>
       </div>
@@ -161,7 +124,72 @@
     </div>
   </div>
 
+  <div class="modal disabled">
+    <div class="window">
+      <div class="modalNav">
+        <div>Settings</div>
+        <div>X</div>
+      </div>
+      <div class="modalBody">
+        <span>Generic MIDI</span>
 
+        <div class="name">
+          <span>Device display name</span>
+          <input type="text">
+        </div>
+
+
+        <div class="devList">
+          <div class="devicesTable ins">
+            <div class="devicesTableTitle">Set input device</div>
+            <div class="devicesTableBody">
+              <div class="deviceTableDevice">
+                <div>0</div>
+                <div>Akai MPC</div>
+              </div>
+              <div class="deviceTableDevice">
+                <div>1</div>
+                <div>Akai APC 40</div>
+              </div>
+              <div class="deviceTableDevice">
+                <div>2</div>
+                <div>Akai LPD 8</div>
+              </div>
+            </div>
+          </div>
+          <div class="devicesTable outs">
+            <div class="devicesTableTitle">Set output device</div>
+            <div class="devicesTableBody">
+              <div class="deviceTableDevice">
+                <div>0</div>
+                <div>Akai MPC</div>
+              </div>
+              <div class="deviceTableDevice">
+                <div>1</div>
+                <div>Akai APC 40</div>
+              </div>
+              <div class="deviceTableDevice selectedDevice">
+                <div>2</div>
+                <div>Akai LPD 8</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div>
+          <button id="RefreshDevice">
+            Refresh
+          </button>
+          <button id="applyDevice">
+            Apply / Add
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
 
 </body>
 <script src="../static/jquerry.js"></script>
