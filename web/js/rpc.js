@@ -59,7 +59,7 @@ $(
   }) */
 
   $("#RefreshDevice").click(function () {
-    alert(counter.data.value)
+    //alert(counter.value)
     couter.Add(1)
     //add interface to the list
 
