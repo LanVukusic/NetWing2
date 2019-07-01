@@ -47,7 +47,7 @@ $(
       $(obj).removeClass("block_active")
     });
     $(this).addClass("block_active")
-  }),
+  })
 
   /* $("#addInterfaceGenericMIDI").click(function () {
     //add interface to the list
@@ -58,17 +58,16 @@ $(
     //apply handlers from the backend to the object
   }) */
 
-  $("#RefreshDevice").click(function () {
+  /* $("#RefreshDevice").click(function () {
     //alert(counter.value)
-    couter.Add(1)
+    counter.add(1)
+    alert(counter.data.value)
     //add interface to the list
 
 
     //call backend
 
     //apply handlers from the backend to the object
-  })
-
-
+  })  //TA VEJICA JE FUL FAKING POMEMBNA.. ZAKI? NEVEM.... */
 );
 

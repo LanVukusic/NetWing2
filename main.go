@@ -11,6 +11,16 @@ import (
 	"github.com/zserge/webview"
 )
 
+//Counter is a bitch
+type Counter struct {
+	Value int `json:"value"`
+}
+
+// Add increases the value of a counter by n
+func (c *Counter) Add(n int) {
+	c.Value = c.Value + int(n)
+}
+
 // main
 func main() {
 	// start services
@@ -65,6 +75,8 @@ func main() {
 	wb.Dispatch(func() {
 		//Create necessary UI bindingsS
 		wb.Bind("counter", &Counter{})
+		wb.Eval("alert('asd')")
+		wb.Eval("alert(counter)")
 		/* updateMidiIns, _ := wb.Bind("MidiListIn", &MidiListIn{})
 		updateMidiOuts, _ := wb.Bind("MidiListOut", &MidiListOut{}) */
 
@@ -86,16 +98,6 @@ func main() {
 		Devices []MidiDevice `json:"devices"`
 	} */
 
-}
-
-//Counter is a bitch
-type Counter struct {
-	Value int `json:"value"`
-}
-
-// Add increases the value of a counter by n
-func (c *Counter) Add(n int) {
-	c.Value = c.Value + int(n)
 }
 
 /* // Reset sets the value of a counter back to zero
