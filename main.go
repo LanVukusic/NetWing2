@@ -2,32 +2,81 @@ package main
 
 // all imports
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"runtime"
 
+	"./handlers"
 	"./helpers"
 
+	"github.com/gomidi/connect"
+	driver "github.com/gomidi/rtmididrv"
+	socketio "github.com/googollee/go-socket.io"
 	"github.com/zserge/webview"
 )
-
-//Counter is a bitch
-type Counter struct {
-	Value int `json:"value"`
-}
-
-// Add increases the value of a counter by n
-func (c *Counter) Add(n int) {
-	c.Value = c.Value + int(n)
-}
 
 // main
 func main() {
 	// start services
-	fmt.Println("Starting webview")
+	fmt.Println("locking Threads")
 	runtime.LockOSThread()
 
-	//create a http server to serve the UI both remote and to the local client
+	//start midi service
+	fmt.Println("Starting MIDI service")
+	drv, err := driver.New()
+	handlers.Must(err)
+	defer drv.Close()
+
+	/* //start OSC
+	fmt.Println("Starting OSC")
+	osclib.StartOSCServer() */
+
+	// create Socket.IO server to handle comunication with frontend
+	fmt.Println("Starting SocketIO connection")
+	server, err := socketio.NewServer(nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		fmt.Println("connected:", s.LocalAddr())
+		return nil
+	})
+
+	/* server.OnEvent("/", "startMidi", func(s socketio.Conn) error {
+		fmt.Println("Starting MIDI service")
+
+		return nil
+	})
+
+	server.OnEvent("/", "stopMidi", func(s socketio.Conn) error {
+		fmt.Println("Stopping MIDI service")
+		return nil
+	}) */
+
+	server.OnEvent("/", "refreshMidi", func(s socketio.Conn) error {
+		fmt.Println("Refreshing device list")
+		//generate ins and outs
+		data, err := getMIDIDevices(drv)
+		handlers.Must(err)
+
+		//json-ify the data
+		dataJ, err := json2text(data)
+		handlers.Must(err)
+
+		//emit data
+		s.Emit("refreshMidiRet", dataJ)
+
+		return nil
+	})
+
+	go server.Serve()
+	defer server.Close()
+
+	// create a http server to serve the UI both remote and to the local client
+	fmt.Println("Starting webserver")
 	go func() {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			fmt.Fprintf(w, "Testing")
@@ -45,21 +94,13 @@ func main() {
 		fs4 := http.FileServer(http.Dir("web/static"))
 		http.Handle("/static/", http.StripPrefix("/static/", fs4))
 
+		http.Handle("/socket.io/", server)
+
 		http.ListenAndServe(":80", nil)
 	}()
 
-	// start midi driver
-	/* var err error
-	midicode.drv, err = driver.New()
-	handlers.Must(err)
-	defer midicode.drv.Close() */
-
-	// juice up the OSC service
-	/* fmt.Println("Starting OSC")
-	osclib.StartOSCServer() */
-
 	// web view settings
-
+	fmt.Println("Starting webview")
 	wb := webview.New(webview.Settings{
 		Width:  1400,
 		Height: 800,
@@ -71,60 +112,50 @@ func main() {
 	})
 
 	defer wb.Exit()
-
-	wb.Dispatch(func() {
-		//Create necessary UI bindingsS
-		wb.Bind("counter", &Counter{})
-		wb.Eval("alert('asd')")
-		wb.Eval("alert(counter)")
-		/* updateMidiIns, _ := wb.Bind("MidiListIn", &MidiListIn{})
-		updateMidiOuts, _ := wb.Bind("MidiListOut", &MidiListOut{}) */
-
-	})
-
 	wb.Run()
-
-	/* // MidiDevice midi device interface
-	type MidiDevice struct {
-		Name string `json:"name"`
-		ID   int    `json:"id"`
-	}
-
-	// MidiInList list of In MIDI devices
-	type MidiListIn struct {
-		Devices []MidiDevice `json:"devices"`
-	}
-	type MidiListOut struct {
-		Devices []MidiDevice `json:"devices"`
-	} */
-
 }
 
-/* // Reset sets the value of a counter back to zero
-func (c *Counter) Reset() {
-	c.Value = 0
+type midiDevice struct {
+	Name string
+	ID   int
 }
 
-//Midi section
-var drv connect.Driver
+type midiPackage struct {
+	Outs []midiDevice
+	Ins  []midiDevice
+}
 
-// GetMIdiDevices gets the list of available devices from the OS
-func GetMIdiDevices() (outs []connect.In) {
-	ins, _ := drv.Ins()
-
+func getMIDIDevices(drv connect.Driver) (outDevices midiPackage, err error) {
+	//gets the inputs
+	ins, err := drv.Ins()
+	if err != nil {
+		return outDevices, err
+	}
 	for _, el := range ins {
-		outs = append(outs, el)
+
+		outDevices.Ins = append(outDevices.Ins, midiDevice{
+			Name: el.String(),
+			ID:   el.Number()})
 	}
-	return outs
-} */
 
-/* // Reset sets the value of a counter back to zero
-func setval(c *MidiListOut) {
-	c.Value = 0
-} */
+	outs, err := drv.Ins()
+	if err != nil {
+		return outDevices, err
+	}
+	for _, el := range outs {
 
-/* func updateMidiLists() {
-	list := GetMIdiDevices()
-
+		outDevices.Outs = append(outDevices.Outs, midiDevice{
+			Name: el.String(),
+			ID:   el.Number()})
+	}
+	return outDevices, nil
 }
-*/
+
+func json2text(in interface{}) (out string, err error) {
+	var jsonData []byte
+	jsonData, err = json.Marshal(in)
+	if err != nil {
+		return "", err
+	}
+	return string(jsonData), nil
+}

@@ -22,7 +22,7 @@
 
     <div class="main">
 
-      <div class="main_window main_views gridster">
+      <div class="main_window main_views gridster disabled">
         main_views
       </div>
 
@@ -128,7 +128,7 @@
     <div class="window">
       <div class="modalNav">
         <div>Settings</div>
-        <div>[Esc]</div>
+        <div id="closeModal" class="navBtn">[Esc]</div>
       </div>
       <div class="modalBody">
         <span>Generic MIDI</span>
@@ -140,38 +140,18 @@
 
 
         <div class="devList">
-          <div class="devicesTable ins">
+          <div class="devicesTable">
             <div class="devicesTableTitle">Set input device</div>
-            <div class="devicesTableBody">
-              <div class="deviceTableDevice">
-                <div>0</div>
-                <div>Akai MPC</div>
-              </div>
-              <div class="deviceTableDevice">
-                <div>1</div>
-                <div>Akai APC 40</div>
-              </div>
-              <div class="deviceTableDevice">
-                <div>2</div>
-                <div>Akai LPD 8</div>
-              </div>
+            <div class="devicesTableBody" id="TableMidiIns">
+              <!-- devices go in here -->
+
             </div>
           </div>
           <div class="devicesTable outs">
             <div class="devicesTableTitle">Set output device</div>
-            <div class="devicesTableBody">
-              <div class="deviceTableDevice">
-                <div>0</div>
-                <div>Akai MPC</div>
-              </div>
-              <div class="deviceTableDevice">
-                <div>1</div>
-                <div>Akai APC 40</div>
-              </div>
-              <div class="deviceTableDevice selectedDevice">
-                <div>2</div>
-                <div>Akai LPD 8</div>
-              </div>
+            <div class="devicesTableBody" id="TableMidiOuts">
+              <!-- devices go in here -->
+
             </div>
           </div>
         </div>
@@ -194,6 +174,7 @@
 </body>
 <script src="../static/jquerry.js"></script>
 <script src="../static/jquery.gridster.min.js"></script>
+<script src="../static/socketio.js"></script>
 <script src="../js/index.js"></script>
 <script src="../js/rpc.js"></script>
 

@@ -46,3 +46,35 @@ let myGrid = $(".gridster").gridster({
 var gridster = $(".gridster").gridster().data('gridster');
 gridster.add_widget("<div class='widget'>Test</div>", [5], [6], [0], [0] )
 
+$(
+  $(".side_block").click(function () {
+    // update main look
+    $('.main_window').each(function (i, obj) {
+      $(obj).addClass("none")
+    });
+    $(".main_" + $(this).text().toString().toLowerCase()).removeClass("none")
+
+    //update menu look
+    $('.side_block').each(function (i, obj) {
+      $(obj).removeClass("block_active")
+    });
+    $(this).addClass("block_active")
+  }),
+
+
+  $("#RefreshDevice").click(function(){
+    socket.emit("refreshMidi", "");
+  }),
+
+  $("#addInterfaceGenericMIDI").click(function(){
+    $(".modal").removeClass("disabled");
+  }),
+
+  $("#closeModal").click(function(){
+    $(".modal").addClass("disabled");
+  })
+
+);
+
+
+

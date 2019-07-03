@@ -8,6 +8,8 @@
   src: url(RobotoMono-Bold.ttf);
 }
 
+
+
 body {
   display: flex;
   flex-direction: column;
@@ -358,6 +360,11 @@ button:hover{
   justify-content: space-between;
   align-items: center;
 }
+
+.navBtn{
+  cursor: pointer;
+}
+
 .modalNav>div{
   margin: 10px 40px;
 }
@@ -408,4 +415,17 @@ button:hover{
 }
 .selectedDevice{
   background-color: rgba(224, 204, 144, 0.432);
+}
+
+
+
+
+
+
+
+
+
+
+.disabled{
+  display: none;
 }
