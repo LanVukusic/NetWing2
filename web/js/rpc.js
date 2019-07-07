@@ -25,3 +25,14 @@ socket.on('refreshMidiRet', function (msg) {
   }
 });
 
+socket.on("CliLog", function(msg){
+  data = JSON.parse(msg);
+  let threatLevel = "err_ok"
+  if(data.level == 1){
+    threatLevel = "err_warn"
+  }else if (data.level == 2){
+    threatLevel ="err_err"
+  }
+  $(".cli").append('<div class="cli_line '+threatLevel+'+><div class="cli_time_stamp">'+Date().getTime()+'</div><div class="cli_type">'+data.cause+'</div><div class="cli_body">'+data.msg+'</div></div>')
+  });
+

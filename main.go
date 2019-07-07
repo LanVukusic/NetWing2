@@ -13,9 +13,12 @@ import (
 
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
-	socketio "github.com/googollee/go-socket.io"
+	socketio "github.com/googollee/go-socket.io"  PREDELI VSE NA TALE LINK  https://godoc.org/github.com/graarh/golang-socketio MEJ V MISLI DA MORE VSE IT NA BROADCAST ALL
+	SEPRAVI MORES NARDIT TUD NEKI KA BO NA CONNECT SYNCALO VSE CLIENTE. LP LAN FROM THE PAST <3 
 	"github.com/zserge/webview"
 )
+
+var server socketio.Server
 
 // main
 func main() {
@@ -72,14 +75,20 @@ func main() {
 		return nil
 	})
 
-	type devicesToAddInfo struct {
+	type devicesInData struct {
 		InDevice   int
 		OutDevice  int
 		DeviceType int
 	}
 
+	type deviceOutAddUI struct {
+		DevName      string
+		FriendlyName string
+		Enabled      string
+	}
+
 	server.OnEvent("/", "AddDevice", func(s socketio.Conn, msg string) error {
-		var data devicesToAddInfo
+		var data devicesInData
 		err := json.Unmarshal([]byte(msg), &data)
 		if err != nil {
 			log.Println(err)
@@ -128,7 +137,9 @@ func main() {
 
 		//emit creation of the device to the UI
 		fmt.Println("listening to device", data.InDevice)
-
+		/* device := deviceOutAddUI{DevName: }
+		s.Emit("AddDeviceReturn", json2text(device))
+		*/
 		return nil
 	})
 
@@ -220,6 +231,10 @@ func json2text(in interface{}) (out string, err error) {
 	return string(jsonData), nil
 }
 
-func handleMidiEvent(in []byte, time int64, deviceId int) {
-	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceId))
+func handleMidiEvent(in []byte, time int64, deviceID int) {
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceID))
+}
+
+func cliLog(cause string, body string, threatLevel int) {
+	server.sockets
 }

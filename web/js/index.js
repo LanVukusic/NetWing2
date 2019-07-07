@@ -98,6 +98,7 @@ $(
     $("#TableMidiOuts").children().each(function (i, obj) {
       if($(obj).hasClass("selectedDevice")){
         outDev = i;
+        //outDev = $(obj).children('div').eq(1).text();
         //return false; // breaks
       }
     });
@@ -108,8 +109,6 @@ $(
       outDevice: outDev,
       deviceType : 0
     }
-
-    console.log(inDev , outDev)
     // alerts user to select the device
     if(inDev == null || outDev==null){
       $("#noDeviceAlert").removeClass("disabled");
@@ -117,7 +116,6 @@ $(
       socket.emit("AddDevice", JSON.stringify(data));
       $(".modal").addClass("disabled");
     }
-    
   })
 );
 
