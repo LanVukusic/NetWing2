@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"./handlers"
-	"./helpers"
 
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
@@ -167,9 +166,8 @@ func main() {
 		Height: 800,
 		Title:  "NetWing",
 		/* URL:                    "file://" + rootDirectory + "/web/view/index.html", */
-		URL:                    "http://localhost/ui/",
-		ExternalInvokeCallback: helpers.HandleRPC,
-		Resizable:              true,
+		URL:       "http://localhost/ui/",
+		Resizable: true,
 	})
 
 	defer wb.Exit()
@@ -222,6 +220,6 @@ func json2text(in interface{}) (out string, err error) {
 	return string(jsonData), nil
 }
 
-func handleMidiEvent(in []byte, time int64) {
-	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s", in[1], in[2]))
+func handleMidiEvent(in []byte, time int64, deviceId int) {
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceId))
 }

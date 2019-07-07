@@ -115,6 +115,7 @@ $(
       $("#noDeviceAlert").removeClass("disabled");
     }else{
       socket.emit("AddDevice", JSON.stringify(data));
+      $(".modal").addClass("disabled");
     }
     
   })

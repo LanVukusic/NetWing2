@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"../handlers"
-
 	"github.com/gomidi/connect"
 	"github.com/zserge/webview"
 )
@@ -32,7 +30,7 @@ func GetMIdiDevices() (outs []connect.In) {
 	return outs
 }
 
-//ListenMidi checks availibility and ATTACHES a MIDI listener to the device
+/* //ListenMidi checks availibility and ATTACHES a MIDI listener to the device
 func ListenMidi(id int) {
 
 	// this line gets the device "id" from the driver, opens it and returns the active device
@@ -59,7 +57,7 @@ func ListenMidi(id int) {
 			}
 		}
 	}
-}
+} */
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
 func StopListenMidi(id int) {
