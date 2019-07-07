@@ -72,9 +72,54 @@ $(
 
   $("#closeModal").click(function(){
     $(".modal").addClass("disabled");
-  })
+  }),
 
+  $('.devList').on('click', '#MidiListDevice', function() {
+    $(this).parent().children('div').each(function (i, obj) {
+      $(obj).removeClass("selectedDevice")
+    });
+    $(this).toggleClass("selectedDevice");
+  }),
+
+  $("#applyDevice").click(function(){
+    
+    let inDev = null;
+    let outDev = null;
+
+    //get in device
+    $("#TableMidiIns").children().each(function (i, obj) {
+      //console.log($(obj).attr('class'), $(obj).hasClass("selectedDevice"));
+      if($(obj).hasClass("selectedDevice")){
+        inDev = i;
+        //return false; // breaks
+      }
+    });
+    //get out device
+    $("#TableMidiOuts").children().each(function (i, obj) {
+      if($(obj).hasClass("selectedDevice")){
+        outDev = i;
+        //return false; // breaks
+      }
+    });
+
+    // device types : 0 MIDI, 1 OSC , 2 ART-NET
+    data = {
+      inDevice : inDev,
+      outDevice: outDev,
+      deviceType : 0
+    }
+
+    console.log(inDev , outDev)
+    // alerts user to select the device
+    if(inDev == null || outDev==null){
+      $("#noDeviceAlert").removeClass("disabled");
+    }else{
+      socket.emit("AddDevice", JSON.stringify(data));
+    }
+    
+  })
 );
+
 
 
 

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"runtime"
+	"strings"
 
 	"./handlers"
 	"./helpers"
@@ -68,6 +69,66 @@ func main() {
 
 		//emit data
 		s.Emit("refreshMidiRet", dataJ)
+
+		return nil
+	})
+
+	type devicesToAddInfo struct {
+		InDevice   int
+		OutDevice  int
+		DeviceType int
+	}
+
+	server.OnEvent("/", "AddDevice", func(s socketio.Conn, msg string) error {
+		var data devicesToAddInfo
+		err := json.Unmarshal([]byte(msg), &data)
+		if err != nil {
+			log.Println(err)
+		}
+
+		fmt.Println("devices: ", data.InDevice, data.InDevice)
+
+		//check validity of the data
+		if data.DeviceType == 0 {
+			// it is a midi device therefore a listener is needed
+
+			in, err := connect.OpenIn(drv, data.InDevice, "")
+
+			//handles the potential error
+			if err != nil {
+				handlers.Must(err)
+				if in.IsOpen() {
+					in.Close()
+				}
+			}
+
+			out, err := connect.OpenOut(drv, data.OutDevice, "")
+
+			//handles the potential error
+			if err != nil {
+				handlers.Must(err)
+				if out.IsOpen() {
+					out.Close()
+				}
+			}
+
+			//if the device is successfully opened it tries to attach a listener
+			if in.IsOpen() {
+				err := in.SetListener(handleMidiEvent)
+				//if unsuccessful, handle the error
+				if err != nil {
+					handlers.Must(err)
+					if in.IsOpen() {
+						//stop the device
+						in.StopListening()
+						in.Close()
+					}
+				}
+			}
+		}
+
+		//emit creation of the device to the UI
+		fmt.Println("listening to device", data.InDevice)
 
 		return nil
 	})
@@ -134,7 +195,8 @@ func getMIDIDevices(drv connect.Driver) (outDevices midiPackage, err error) {
 	for _, el := range ins {
 
 		outDevices.Ins = append(outDevices.Ins, midiDevice{
-			Name: el.String(),
+			// it splits the string by spaces, removeslast slice (the number) and joins it back together to form a string
+			Name: strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
 			ID:   el.Number()})
 	}
 
@@ -145,7 +207,7 @@ func getMIDIDevices(drv connect.Driver) (outDevices midiPackage, err error) {
 	for _, el := range outs {
 
 		outDevices.Outs = append(outDevices.Outs, midiDevice{
-			Name: el.String(),
+			Name: strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
 			ID:   el.Number()})
 	}
 	return outDevices, nil
@@ -158,4 +220,8 @@ func json2text(in interface{}) (out string, err error) {
 		return "", err
 	}
 	return string(jsonData), nil
+}
+
+func handleMidiEvent(in []byte, time int64) {
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s", in[1], in[2]))
 }

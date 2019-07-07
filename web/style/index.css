@@ -408,13 +408,16 @@ button:hover{
 }
 .deviceTableDevice{
   margin: 4px 4px;
+  padding: 1px 4px;
   display: flex;
   justify-content: space-between;
   cursor: pointer;
-  background-color: rgba(235, 222, 183, 0.062)
+  background-color: rgba(235, 222, 183, 0.062);
+  border-left: solid 10px rgba(0, 0, 0, 0);
 }
 .selectedDevice{
-  background-color: rgba(224, 204, 144, 0.432);
+  background-color: rgba(224, 204, 144, 0.253);
+  border-left: solid 10px #61f57a;
 }
 
 
