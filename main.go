@@ -237,5 +237,5 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 }
 
 func cliLog(cause string, body string, threatLevel int) {
-	server.sockets
+
 }
