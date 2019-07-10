@@ -13,12 +13,10 @@ import (
 
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
-	socketio "github.com/googollee/go-socket.io"  PREDELI VSE NA TALE LINK  https://godoc.org/github.com/graarh/golang-socketio MEJ V MISLI DA MORE VSE IT NA BROADCAST ALL
-	SEPRAVI MORES NARDIT TUD NEKI KA BO NA CONNECT SYNCALO VSE CLIENTE. LP LAN FROM THE PAST <3 
+	socketio "github.com/graarh/golang-socketio"
+
 	"github.com/zserge/webview"
 )
-
-var server socketio.Server
 
 // main
 func main() {
@@ -35,116 +33,112 @@ func main() {
 	/* //start OSC
 	fmt.Println("Starting OSC")
 	osclib.StartOSCServer() */
-
-	// create Socket.IO server to handle comunication with frontend
-	fmt.Println("Starting SocketIO connection")
-	server, err := socketio.NewServer(nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-	server.OnConnect("/", func(s socketio.Conn) error {
-		s.SetContext("")
-		fmt.Println("connected:", s.LocalAddr())
-		return nil
-	})
-
-	/* server.OnEvent("/", "startMidi", func(s socketio.Conn) error {
-		fmt.Println("Starting MIDI service")
-
-		return nil
-	})
-
-	server.OnEvent("/", "stopMidi", func(s socketio.Conn) error {
-		fmt.Println("Stopping MIDI service")
-		return nil
-	}) */
-
-	server.OnEvent("/", "refreshMidi", func(s socketio.Conn) error {
-		fmt.Println("Refreshing device list")
-		//generate ins and outs
-		data, err := getMIDIDevices(drv)
-		handlers.Must(err)
-
-		//json-ify the data
-		dataJ, err := json2text(data)
-		handlers.Must(err)
-
-		//emit data
-		s.Emit("refreshMidiRet", dataJ)
-
-		return nil
-	})
-
-	type devicesInData struct {
-		InDevice   int
-		OutDevice  int
-		DeviceType int
-	}
-
-	type deviceOutAddUI struct {
-		DevName      string
-		FriendlyName string
-		Enabled      string
-	}
-
-	server.OnEvent("/", "AddDevice", func(s socketio.Conn, msg string) error {
-		var data devicesInData
-		err := json.Unmarshal([]byte(msg), &data)
+	var SocketioServer *socketio.Server
+	go func() {
+		// create Socket.IO server to handle comunication with frontend
+		fmt.Println("Starting SocketIO connection")
+		SocketioServer = socketio.NewServer(nil)
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
+		SocketioServer.On(socketio.OnConnection, func(c *socketio.Channel) error {
+			fmt.Println("connected:", c.Ip())
+			return nil
+		})
 
-		fmt.Println("devices: ", data.InDevice, data.InDevice)
+		serveMux := http.NewServeMux()
+		serveMux.Handle("/socket.io/", SocketioServer)
+		http.ListenAndServe(":80", serveMux)
 
-		//check validity of the data
-		if data.DeviceType == 0 {
-			// it is a midi device therefore a listener is needed
-
-			in, err := connect.OpenIn(drv, data.InDevice, "")
-
-			//handles the potential error
-			if err != nil {
+		/*
+			server.OnEvent("/", "refreshMidi", func(s socketio.Conn) error {
+				fmt.Println("Refreshing device list")
+				//generate ins and outs
+				data, err := getMIDIDevices(drv)
 				handlers.Must(err)
-				if in.IsOpen() {
-					in.Close()
-				}
+
+				//json-ify the data
+				dataJ, err := json2text(data)
+				handlers.Must(err)
+
+				//emit data
+				s.Emit("refreshMidiRet", dataJ)
+
+				return nil
+			})
+
+			type devicesInData struct {
+				InDevice   int
+				OutDevice  int
+				DeviceType int
 			}
 
-			out, err := connect.OpenOut(drv, data.OutDevice, "")
-
-			//handles the potential error
-			if err != nil {
-				handlers.Must(err)
-				if out.IsOpen() {
-					out.Close()
-				}
+			type deviceOutAddUI struct {
+				DevName      string
+				FriendlyName string
+				Enabled      string
 			}
 
-			//if the device is successfully opened it tries to attach a listener
-			if in.IsOpen() {
-				err := in.SetListener(handleMidiEvent)
-				//if unsuccessful, handle the error
+			server.OnEvent("/", "AddDevice", func(s socketio.Conn, msg string) error {
+				var data devicesInData
+				err := json.Unmarshal([]byte(msg), &data)
 				if err != nil {
-					handlers.Must(err)
+					log.Println(err)
+				}
+
+				fmt.Println("devices: ", data.InDevice, data.InDevice)
+
+				//check validity of the data
+				if data.DeviceType == 0 {
+					// it is a midi device therefore a listener is needed
+
+					in, err := connect.OpenIn(drv, data.InDevice, "")
+
+					//handles the potential error
+					if err != nil {
+						handlers.Must(err)
+						if in.IsOpen() {
+							in.Close()
+						}
+					}
+
+					out, err := connect.OpenOut(drv, data.OutDevice, "")
+
+					//handles the potential error
+					if err != nil {
+						handlers.Must(err)
+						if out.IsOpen() {
+							out.Close()
+						}
+					}
+
+					//if the device is successfully opened it tries to attach a listener
 					if in.IsOpen() {
-						//stop the device
-						in.StopListening()
-						in.Close()
+						err := in.SetListener(handleMidiEvent)
+						//if unsuccessful, handle the error
+						if err != nil {
+							handlers.Must(err)
+							if in.IsOpen() {
+								//stop the device
+								in.StopListening()
+								in.Close()
+							}
+						}
 					}
 				}
-			}
-		}
 
-		//emit creation of the device to the UI
-		fmt.Println("listening to device", data.InDevice)
-		/* device := deviceOutAddUI{DevName: }
-		s.Emit("AddDeviceReturn", json2text(device))
+				//emit creation of the device to the UI
+				fmt.Println("listening to device", data.InDevice)
+				device := deviceOutAddUI{DevName: }
+				s.Emit("AddDeviceReturn", json2text(device))
+
+				return nil
+			})
+
+			go server.Serve()
+			defer server.Close()
 		*/
-		return nil
-	})
-
-	go server.Serve()
-	defer server.Close()
+	}()
 
 	// create a http server to serve the UI both remote and to the local client
 	fmt.Println("Starting webserver")
@@ -165,9 +159,9 @@ func main() {
 		fs4 := http.FileServer(http.Dir("web/static"))
 		http.Handle("/static/", http.StripPrefix("/static/", fs4))
 
-		http.Handle("/socket.io/", server)
+		http.Handle("/socket.io/", SocketioServer)
 
-		http.ListenAndServe(":80", nil)
+		//http.ListenAndServe(":80", nil)
 	}()
 
 	// web view settings
@@ -235,6 +229,6 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceID))
 }
 
-func cliLog(cause string, body string, threatLevel int) {
+/* func cliLog(cause string, body string, threatLevel int) {
 	server.sockets
-}
+} */
