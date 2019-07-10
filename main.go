@@ -13,8 +13,9 @@ import (
 
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
-	socketio "github.com/googollee/go-socket.io"  PREDELI VSE NA TALE LINK  https://godoc.org/github.com/graarh/golang-socketio MEJ V MISLI DA MORE VSE IT NA BROADCAST ALL
-	SEPRAVI MORES NARDIT TUD NEKI KA BO NA CONNECT SYNCALO VSE CLIENTE. LP LAN FROM THE PAST <3 
+	socketio "github.com/googollee/go-socket.io"
+
+	//https://godoc.org/github.com/graarh/golang-socketio
 	"github.com/zserge/webview"
 )
 
