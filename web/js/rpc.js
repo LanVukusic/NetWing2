@@ -23,7 +23,7 @@
   }
 }); */
 
-socket.on("CliLog", function(msg){
+/* socket.on("CliLog", function(msg){
   data = JSON.parse(msg);
   let threatLevel = "err_ok"
   if(data.level == 1){
@@ -32,7 +32,7 @@ socket.on("CliLog", function(msg){
     threatLevel ="err_err"
   }
   $(".cli").append('<div class="cli_line '+threatLevel+'+><div class="cli_time_stamp">'+Date().getTime()+'</div><div class="cli_type">'+data.cause+'</div><div class="cli_body">'+data.msg+'</div></div>')
-});
+}); */
 
 if (window["WebSocket"]) {
   conn = new WebSocket("ws://" + document.location.host + "/ws");
@@ -40,13 +40,22 @@ if (window["WebSocket"]) {
 
   conn.onclose = function (evt) {
     console.log("SERVER CONNECTION DROPPED")
+    alert("SERVER CONNECTION DROPPED")
     // ADD THE ERROR WARNING HERE
   };
 
   conn.onmessage = function (evt) {
-    console.log(evt.data)
+    evt = JSON.parse(evt.data)
+    console.log(evt)
+    switch(evt.Event){
+      case "cli":
+        cliLog(evt.ThreatLevel, evt.Cause, evt.Body)
+        break
     }
+
+  }
 
 } else {
   alert("Your browser does not support websocket connection. Interface is not operational.")
 }
+

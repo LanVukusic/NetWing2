@@ -79,7 +79,16 @@ $(
       $(obj).removeClass("selectedDevice")
     });
     $(this).toggleClass("selectedDevice");
+  }),
+
+  $("#cli_clear").click(function(){
+    $(".cli").html("");
+  }),
+
+  $("#test").click(function(){
+    cliLog(1, "test", "this is a tasty test")
   })
+  
   /* $("#applyDevice").click(function(){
     
     let inDev = null;

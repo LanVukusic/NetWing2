@@ -28,7 +28,6 @@ var mainDeviceList [50]helpers.InterfaceDevice
 var drvMIDI connect.Driver
 
 var upgrader websocket.Upgrader
-var wsConnection *websocket.Conn
 var wsConnections []*websocket.Conn // supports max 30 clients
 
 // main
@@ -72,6 +71,49 @@ func main() {
 		wb.Run()
 	}
 
+	cliLog("Engine", "Engine running smoothly", 0)
+
+}
+
+func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
+	fmt.Println(string(p), socket.LocalAddr().String())
+
+	/* if err := socket.WriteMessage(messageType, p); err != nil {
+		handleErr(err, "Websocket message writing error for: "+socket.LocalAddr().String(), true)
+	} */
+	//cliLog("testing", "hey testing cli working", 0)
+}
+
+func broadcastMessage(msg interface{}) {
+	for _, client := range wsConnections {
+		err := client.WriteJSON(msg)
+		if err != nil {
+			handleErr(err, "error during websocket broadcasting ", false)
+		}
+	}
+}
+
+func upgradeConnection(w http.ResponseWriter, r *http.Request) {
+	// upgrade connection to WS connection
+	wsConnection, err := upgrader.Upgrade(w, r, nil)
+	wsConnections = append(wsConnections, wsConnection)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println("websocket connection from: " + wsConnection.LocalAddr().String())
+	cliLog("WebServer", fmt.Sprintf("Client Connected : %v", wsConnection.LocalAddr().String()), 0)
+
+	go func() {
+		for {
+			messageType, p, err := wsConnection.ReadMessage()
+			if err != nil {
+				handleErr(err, "Websocket message reading error for: "+wsConnection.LocalAddr().String(), true)
+				return
+			}
+			handleWSMessage(messageType, p, wsConnection)
+		}
+	}()
 }
 
 func runWebserver() {
@@ -82,27 +124,7 @@ func runWebserver() {
 
 	// handle web socket connection
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		wsConnection, err := upgrader.Upgrade(w, r, nil)
-		/* wsConnections = append(wsConnections, tempconn) */
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		fmt.Println("websocket connection up")
-
-		go func() {
-			for {
-				messageType, p, err := wsConnection.ReadMessage()
-				if err != nil {
-					log.Println(err)
-					return
-				}
-				if err := wsConnection.WriteMessage(messageType, p); err != nil {
-					log.Println(err)
-					return
-				}
-			}
-		}()
+		upgradeConnection(w, r)
 	})
 
 	fs := http.FileServer(http.Dir("web/view"))
@@ -160,12 +182,28 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceID))
 }
 
-/* func cliLog(cause string, body string, threatLevel int) {
+func cliLog(cause string, body string, threatLevel int) {
+	alert := helpers.CliMsg{
+		Event:       "cli",
+		Cause:       cause,
+		Body:        body,
+		ThreatLevel: threatLevel,
+	}
+	broadcastMessage(alert)
+}
 
-} */
-
-func handleErr(err error, msg string) {
+func handleErr(err error, msg string, bcast bool) {
 	fmt.Println(err, msg)
+	if bcast {
+		alert := helpers.CliMsg{
+			Cause:       err.Error(),
+			Body:        msg,
+			ThreatLevel: 2,
+		}
+
+		broadcastMessage(alert)
+	}
+
 }
 
 //ListenMidi checks availability and ATTACHES a MIDI listener to the device
@@ -175,7 +213,7 @@ func ListenMidi(id int) {
 
 	//handles the potential error
 	if err != nil {
-		handleErr(err, "MIDI device:"+string(id)+"is unavailble")
+		handleErr(err, "MIDI device:"+string(id)+"is unavailble", true)
 		if in.IsOpen() {
 			in.Close()
 		}
@@ -185,7 +223,7 @@ func ListenMidi(id int) {
 		err := in.SetListener(handleMidiEvent)
 		//if unsuccessful, handle the error
 		if err != nil {
-			handleErr(err, "MIDI device:"+string(id)+"cant receive a listener")
+			handleErr(err, "MIDI device:"+string(id)+"cant receive a listener", true)
 			if in.IsOpen() {
 				//stop the device
 				in.StopListening()
@@ -193,6 +231,7 @@ func ListenMidi(id int) {
 			}
 		}
 	}
+	cliLog("MIDI Interf.", fmt.Sprintf("Listening to MIDI device %v", id), 0)
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
@@ -205,6 +244,7 @@ func StopListenMidi(id int) {
 	if ins[id].IsOpen() {
 		ins[id].Close()
 	}
+	cliLog("MIDI", fmt.Sprintf("MIDI device %v successfully closed", id), 0)
 }
 
 func handleMIDIevent(data []byte, deltaMicroseconds int64) {
@@ -226,7 +266,7 @@ func initializeSavedDevices(devlist []helpers.InterfaceDevice) (err error) {
 				var err error
 				drvMIDI, err = driver.New()
 				if err != nil {
-					handleErr(err, "cant create MIDI driver")
+					handleErr(err, "cant create MIDI driver", true)
 					return err
 				}
 			}
@@ -235,7 +275,7 @@ func initializeSavedDevices(devlist []helpers.InterfaceDevice) (err error) {
 			ListenMidi(device.HardwareID)
 
 		} else {
-			handleErr(nil, "unrecognized device type")
+			handleErr(nil, "unrecognized device type", true)
 		}
 
 		//update ui
@@ -243,5 +283,6 @@ func initializeSavedDevices(devlist []helpers.InterfaceDevice) (err error) {
 		//check if device exists
 
 	}
+	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil
 }

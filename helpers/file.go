@@ -44,6 +44,14 @@ type OSCoutput struct {
 	argument int16
 }
 
+//CliMsg is a holder for any warn or error that gets sent from backend to be displayed on the CLI of clients
+type CliMsg struct {
+	Event       string
+	Cause       string
+	Body        string
+	ThreatLevel int
+}
+
 //GetOSCMessage returns an OSC message ready to get sent.
 /* func (o OSCoutput) GetOSCMessage() (msg string, err error) {
 
