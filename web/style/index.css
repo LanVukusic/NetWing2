@@ -282,11 +282,26 @@ button:hover{
 }
 
 
-
-
-.cli {
-  background-color: #282f44;
+.cli_housing{
+  width: 100vw;
   flex: 2 2 30px;
+  display: flex;
+}
+
+.cli_tools{
+  flex: 1;
+  background-color: #2b3249;
+  display: flex;
+  flex-direction: column;
+}
+.cli_tools > button{
+  font-size: 100%;
+  margin: 1vh 1vw;
+}
+.cli {
+  flex: 15;
+  background-color: #282f44;
+  height: 100%;
   overflow-y: scroll;
   font-size: 1.1em;
   color: white;
