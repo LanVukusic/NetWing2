@@ -9,24 +9,25 @@ func Alert(w webview.WebView, text string) {
 	w.Eval("alert('" + text + "')")
 }
 
-//midiDevice is a holder for a midi device that gets sent from BEnd to UI
-type midiDevice struct {
+//MidiDevice is a holder for a midi device that gets sent from BEnd to UI
+type MidiDevice struct {
 	Name string
 	ID   int
 }
 
 //MidiPackage holds in and ut devices for updating the UI
 type MidiPackage struct {
-	Outs []midiDevice
-	Ins  []midiDevice
+	Outs []MidiDevice
+	Ins  []MidiDevice
 }
 
 //InterfaceDevice holds a reference to a device that user assigns. It can be any type of interface that will potentially get mapped.
 type InterfaceDevice struct {
-	bindID       int16
-	deviceType   int16 // 0 = MIDI
-	hardwareName string
-	friendlyName string
+	BindID       int16
+	DeviceType   int16 // 0 = MIDI
+	HardwareName string
+	FriendlyName string
+	HardwareID   int
 }
 
 //InterfaceMessage is an incoming message from any device interface. It serves as the key in the interface - OSC mapping.

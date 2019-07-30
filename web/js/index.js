@@ -79,8 +79,7 @@ $(
       $(obj).removeClass("selectedDevice")
     });
     $(this).toggleClass("selectedDevice");
-  }),
-
+  })
   /* $("#applyDevice").click(function(){
     
     let inDev = null;
