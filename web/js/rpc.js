@@ -52,9 +52,7 @@ if (window["WebSocket"]) {
         cliLog(evt.ThreatLevel, evt.Cause, evt.Body)
         break
     }
-
   }
-
 } else {
   alert("Your browser does not support websocket connection. Interface is not operational.")
 }
