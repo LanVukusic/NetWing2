@@ -1,6 +1,6 @@
-var socket = io();
 
-socket.on('refreshMidiRet', function (msg) {
+
+/* socket.on('refreshMidiRet', function (msg) {
   //populate ins
   data = JSON.parse(msg);
 
@@ -23,9 +23,9 @@ socket.on('refreshMidiRet', function (msg) {
       $("#TableMidiOuts").append('<div class="deviceTableDevice" id="MidiListDevice"><div>' + element.ID + '</div><div>' + element.Name + '</div></div>');
     });
   }
-});
+}); */
 
-socket.on("CliLog", function(msg){
+/* socket.on("CliLog", function(msg){
   data = JSON.parse(msg);
   let threatLevel = "err_ok"
   if(data.level == 1){
@@ -34,5 +34,8 @@ socket.on("CliLog", function(msg){
     threatLevel ="err_err"
   }
   $(".cli").append('<div class="cli_line '+threatLevel+'+><div class="cli_time_stamp">'+Date().getTime()+'</div><div class="cli_type">'+data.cause+'</div><div class="cli_body">'+data.msg+'</div></div>')
-  });
+  }); */
 
+  const ws = new WebSocket('ws://www.host.com/path', {
+    perMessageDeflate: false
+  });

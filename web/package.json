@@ -1,0 +1,14 @@
+{
+  "name": "netwing",
+  "version": "1.0.0",
+  "description": "Show controll software",
+  "main": "main.go",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Lan Vukusic",
+  "license": "ISC",
+  "dependencies": {
+    "ws": "^7.1.1"
+  }
+}

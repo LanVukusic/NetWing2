@@ -62,9 +62,9 @@ $(
   }),
 
 
-  $("#RefreshDevice").click(function(){
+  /* $("#RefreshDevice").click(function(){
     socket.emit("refreshMidi", "");
-  }),
+  }), */
 
   $("#addInterfaceGenericMIDI").click(function(){
     $(".modal").removeClass("disabled");
@@ -81,7 +81,7 @@ $(
     $(this).toggleClass("selectedDevice");
   }),
 
-  $("#applyDevice").click(function(){
+  /* $("#applyDevice").click(function(){
     
     let inDev = null;
     let outDev = null;
@@ -116,7 +116,7 @@ $(
       socket.emit("AddDevice", JSON.stringify(data));
       $(".modal").addClass("disabled");
     }
-  })
+  }) */
 );
 
 
