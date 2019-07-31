@@ -38,8 +38,8 @@ type InterfaceMessage struct {
 	value   int16 // the value normalized from 0 to 100
 }
 
-//OSCoutput has all the defined values to create an OSC message.
-type OSCoutput struct {
+//OSCOutput has all the defined values to create an OSC message.
+type OSCOutput struct {
 	message  string
 	argument int16
 }
@@ -52,7 +52,13 @@ type CliMsg struct {
 	ThreatLevel int
 }
 
+//WSMsgTemplate represents the type of a message that gets returned from UI. It carries an event and some data.
+type WSMsgTemplate struct {
+	Event string
+	Data  string
+}
+
 //GetOSCMessage returns an OSC message ready to get sent.
-/* func (o OSCoutput) GetOSCMessage() (msg string, err error) {
+/* func (o OSCOOutput) GetOSCMessage() (msg string, err error) {
 
 } */

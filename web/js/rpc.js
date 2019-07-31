@@ -37,7 +37,7 @@
 if (window["WebSocket"]) {
   conn = new WebSocket("ws://" + document.location.host + "/ws");
 
-
+  
   conn.onclose = function (evt) {
     console.log("SERVER CONNECTION DROPPED")
     alert("SERVER CONNECTION DROPPED")

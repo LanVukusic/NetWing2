@@ -12,6 +12,7 @@ import (
 
 	"./helpers"
 
+	"github.com/gobuffalo/packr"
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
 	"github.com/gorilla/websocket"
@@ -19,14 +20,19 @@ import (
 	"github.com/zserge/webview"
 )
 
+// packeging
+var bigBox packr.Box
+
 // main mapping dictionary
 var mainmappings map[helpers.InterfaceMessage]int
 
 // main device array. supports max of 50 devices
 var mainDeviceList [50]helpers.InterfaceDevice
 
+// MIDI stuff
 var drvMIDI connect.Driver
 
+// Websocket and network
 var upgrader websocket.Upgrader
 var wsConnections []*websocket.Conn // supports max 30 clients
 
@@ -36,6 +42,9 @@ func main() {
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 	}
+
+	// packages all static files in one binary
+	bigBox = packerEverything()
 
 	mainmappings = make(map[helpers.InterfaceMessage]int)
 
@@ -55,8 +64,7 @@ func main() {
 	go runWebserver()
 
 	// web view settings
-
-	if true {
+	if false {
 		fmt.Println("Starting webview")
 		wb := webview.New(webview.Settings{
 			Width:  1400,
@@ -66,13 +74,21 @@ func main() {
 			URL:       "http://localhost/ui/",
 			Resizable: true,
 		})
-
+		cliLog("Engine", "Engine running GUI mode", 0)
 		defer wb.Exit()
 		wb.Run()
+	} else {
+		cliLog("Engine", "Engine running CLI mode", 0)
+		for true {
+			// run infinite loop on
+		}
 	}
 
-	cliLog("Engine", "Engine running smoothly", 0)
+}
 
+func packerEverything() (box packr.Box) {
+	box = packr.NewBox("./web")
+	return box
 }
 
 func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
@@ -179,7 +195,7 @@ func json2text(in interface{}) (out string, err error) {
 }
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
-	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", in[1], in[2], deviceID))
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", string(in[1]), string(in[2]), string(deviceID)))
 }
 
 func cliLog(cause string, body string, threatLevel int) {
@@ -213,7 +229,7 @@ func ListenMidi(id int) {
 
 	//handles the potential error
 	if err != nil {
-		handleErr(err, "MIDI device:"+string(id)+"is unavailble", true)
+		handleErr(err, "MIDI device:"+string(id)+"is unavailable", true)
 		if in.IsOpen() {
 			in.Close()
 		}

@@ -62,9 +62,12 @@ $(
   }),
 
 
-  /* $("#RefreshDevice").click(function(){
-    socket.emit("refreshMidi", "");
-  }), */
+  $("#RefreshDevice").click(function(){
+    let data = {
+      event : "getMidiDevices"
+    }
+    socket.send(JSON.stringify(data))
+  }),
 
   $("#addInterfaceGenericMIDI").click(function(){
     $(".modal").removeClass("disabled");

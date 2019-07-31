@@ -295,11 +295,12 @@ button:hover{
   flex-direction: column;
 }
 .cli_tools > button{
-  font-size: 100%;
+  font-size: 110%;
+  padding: 0.5vh 0.5vw;
   margin: 1vh 1vw;
 }
 .cli {
-  flex: 15;
+  flex: 10;
   background-color: #282f44;
   height: 100%;
   overflow-y: scroll;
