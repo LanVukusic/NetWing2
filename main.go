@@ -21,7 +21,8 @@ import (
 )
 
 // packeging
-var bigBox packr.Box
+var boxView packr.Box
+var boxStyle packr.Box
 
 // main mapping dictionary
 var mainmappings map[helpers.InterfaceMessage]int
@@ -44,7 +45,8 @@ func main() {
 	}
 
 	// packages all static files in one binary
-	bigBox = packerEverything()
+	boxView = packr.NewBox("./web/view")
+	boxStyle = packr.NewBox("./web/style/")
 
 	mainmappings = make(map[helpers.InterfaceMessage]int)
 
@@ -84,11 +86,6 @@ func main() {
 		}
 	}
 
-}
-
-func packerEverything() (box packr.Box) {
-	box = packr.NewBox("./web")
-	return box
 }
 
 func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
@@ -143,17 +140,31 @@ func runWebserver() {
 		upgradeConnection(w, r)
 	})
 
-	fs := http.FileServer(http.Dir("web/view"))
-	http.Handle("/ui/", http.StripPrefix("/ui/", fs))
+	//serve index
+	index, err := boxView.FindString("index.html")
+	if err != nil {
+		handleErr(err, "cant serve index", false)
+	}
+	http.HandleFunc("/ui/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, index)
+	})
 
-	fs2 := http.FileServer(http.Dir("web/style"))
-	http.Handle("/style/", http.StripPrefix("/style/", fs2))
+	http.Handle("/style", http.FileServer(http.Dir(("./web/style"))))
 
-	fs3 := http.FileServer(http.Dir("web/js"))
-	http.Handle("/js/", http.StripPrefix("/js/", fs3))
+	/* 	//serve index
+	   	index, err := boxView.FindString("index.html")
+	   	if err != nil {
+	   		handleErr(err, "cant serve index", false)
+	   	}
+	   	http.HandleFunc("/ui/", func(w http.ResponseWriter, r *http.Request) {
+	   		fmt.Fprintf(w, index)
+	   	})
 
-	fs4 := http.FileServer(http.Dir("web/static"))
-	http.Handle("/static/", http.StripPrefix("/static/", fs4))
+	   	//serve other files
+	   	fmt.Println(boxStyle.List())
+	   	http.Handle("/style", http.FileServer(boxStyle))
+	   	http.Handle("/js", http.FileServer(boxJs))
+	   	http.Handle("/static", http.FileServer(boxStatic)) */
 
 	http.ListenAndServe(":80", nil)
 }
