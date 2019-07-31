@@ -23,6 +23,8 @@ import (
 // packeging
 var boxView packr.Box
 var boxStyle packr.Box
+var boxStatic packr.Box
+var boxJs packr.Box
 
 // main mapping dictionary
 var mainmappings map[helpers.InterfaceMessage]int
@@ -46,7 +48,10 @@ func main() {
 
 	// packages all static files in one binary
 	boxView = packr.NewBox("./web/view")
-	boxStyle = packr.NewBox("./web/style/")
+	boxStatic = packr.NewBox("./web/")
+	/* boxStyle = packr.NewBox("./web/style/")
+	boxStatic = packr.NewBox("./web/static/")
+	boxJs = packr.NewBox("./web/js/") */
 
 	mainmappings = make(map[helpers.InterfaceMessage]int)
 
@@ -66,7 +71,7 @@ func main() {
 	go runWebserver()
 
 	// web view settings
-	if false {
+	if true {
 		fmt.Println("Starting webview")
 		wb := webview.New(webview.Settings{
 			Width:  1400,
@@ -81,9 +86,11 @@ func main() {
 		wb.Run()
 	} else {
 		cliLog("Engine", "Engine running CLI mode", 0)
-		for true {
-			// run infinite loop on
-		}
+		go func() {
+			for true {
+				// run infinite loop on
+			}
+		}()
 	}
 
 }
@@ -131,9 +138,9 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 
 func runWebserver() {
 	// handle root
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	/* http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Testing")
-	})
+	}) */
 
 	// handle web socket connection
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -149,23 +156,9 @@ func runWebserver() {
 		fmt.Fprintf(w, index)
 	})
 
-	http.Handle("/style", http.FileServer(http.Dir(("./web/style"))))
-
-	/* 	//serve index
-	   	index, err := boxView.FindString("index.html")
-	   	if err != nil {
-	   		handleErr(err, "cant serve index", false)
-	   	}
-	   	http.HandleFunc("/ui/", func(w http.ResponseWriter, r *http.Request) {
-	   		fmt.Fprintf(w, index)
-	   	})
-
-	   	//serve other files
-	   	fmt.Println(boxStyle.List())
-	   	http.Handle("/style", http.FileServer(boxStyle))
-	   	http.Handle("/js", http.FileServer(boxJs))
-	   	http.Handle("/static", http.FileServer(boxStatic)) */
-
+	/* http.Handle("/style/", http.StripPrefix("/style/", http.FileServer(boxStyle))) */
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(boxStatic)))
+	/* http.Handle("/js/", http.StripPrefix("/js/", http.FileServer(boxJs))) */
 	http.ListenAndServe(":80", nil)
 }
 
