@@ -95,13 +95,66 @@ func main() {
 
 }
 
-func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
-	fmt.Println(string(p), socket.LocalAddr().String())
+// helper functions and whatnot
 
-	/* if err := socket.WriteMessage(messageType, p); err != nil {
-		handleErr(err, "Websocket message writing error for: "+socket.LocalAddr().String(), true)
-	} */
-	//cliLog("testing", "hey testing cli working", 0)
+func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
+	var raw map[string]interface{}
+	err := json.Unmarshal(p, &raw)
+	if err != nil {
+		handleErr(err, fmt.Sprintf("Error while parsing JSON from %s", socket.LocalAddr().String()), true)
+	}
+
+	switch raw["event"] {
+	case "getMidiDevices":
+		data, err := getMIDIDevices(drvMIDI)
+		if err != nil {
+			handleErr(err, "Error while getting MIDI devices", true)
+		} else {
+			socket.WriteJSON(data)
+		}
+		break
+	case "addInterface":
+		devType := int(raw["deviceType"].(float64))
+		if devType == 0 { // it is a MIDI device
+			var id int
+			id = 100
+			// add device to main device list
+			for i, interf := range mainDeviceList {
+				if !interf.Active {
+					id = i
+					// free space in our device array
+					mainDeviceList[i] = helpers.InterfaceDevice{
+						Active:       true,
+						BindID:       id,
+						DeviceType:   0,
+						HardwareName: fmt.Sprintf("%v", raw["HardwareName"]),
+						FriendlyName: fmt.Sprintf("%v", raw["FriendlyName"])}
+					break
+				}
+			}
+
+			if id > 50 {
+				cliLog("Device level reached", "You have too many active devices.", 1)
+				return
+			}
+
+			// handle its inputs / outputs
+			ListenMidi(int(raw["inDevice"].(float64)))
+			hName := fmt.Sprintf("%v", raw["HardwareName"])
+			fName := fmt.Sprintf("%v", raw["FriendlyName"])
+			sID := strconv.Itoa(id)
+
+			fmt.Println(sID)
+			data := helpers.WSMsgTemplate{
+				Event: "UiAddDevice",
+				Data:  "{'ID':'" + sID + "','Hname':'" + hName + "','FriendlyName':'" + fName + "'}",
+			}
+			// update the UI
+			broadcastMessage(data)
+
+		}
+	}
+
 }
 
 func broadcastMessage(msg interface{}) {
@@ -138,9 +191,9 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 
 func runWebserver() {
 	// handle root
-	/* http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Testing")
-	}) */
+	})
 
 	// handle web socket connection
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -163,11 +216,21 @@ func runWebserver() {
 }
 
 func getMIDIDevices(drv connect.Driver) (outDevices helpers.MidiPackage, err error) {
+	outDevices.Event = "refreshMidiRet"
+	if drv == nil {
+		drv, err = driver.New()
+		if err != nil {
+			handleErr(err, "Failed creation of MIDI device driver.", true)
+			return
+		}
+	}
+
 	//gets the inputs
 	ins, err := drv.Ins()
 	if err != nil {
 		return outDevices, err
 	}
+
 	for _, el := range ins {
 
 		outDevices.Ins = append(outDevices.Ins, helpers.MidiDevice{
@@ -200,6 +263,7 @@ func json2text(in interface{}) (out string, err error) {
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
 	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", string(in[1]), string(in[2]), string(deviceID)))
+	cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 }
 
 func cliLog(cause string, body string, threatLevel int) {
@@ -215,19 +279,22 @@ func cliLog(cause string, body string, threatLevel int) {
 func handleErr(err error, msg string, bcast bool) {
 	fmt.Println(err, msg)
 	if bcast {
-		alert := helpers.CliMsg{
-			Cause:       err.Error(),
-			Body:        msg,
-			ThreatLevel: 2,
-		}
-
-		broadcastMessage(alert)
+		cliLog(err.Error(), msg, 2)
 	}
 
 }
 
 //ListenMidi checks availability and ATTACHES a MIDI listener to the device
 func ListenMidi(id int) {
+	// check if the MIDI driver is missing
+	if drvMIDI == nil {
+		var err error
+		drvMIDI, err = driver.New()
+		if err != nil {
+			handleErr(err, "Error creating midi driver", true)
+		}
+	}
+
 	// this line gets the device "id" from the driver, opens it and returns the active device
 	in, err := connect.OpenIn(drvMIDI, id, "")
 

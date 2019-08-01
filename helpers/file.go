@@ -17,13 +17,15 @@ type MidiDevice struct {
 
 //MidiPackage holds in and ut devices for updating the UI
 type MidiPackage struct {
-	Outs []MidiDevice
-	Ins  []MidiDevice
+	Event string
+	Outs  []MidiDevice
+	Ins   []MidiDevice
 }
 
 //InterfaceDevice holds a reference to a device that user assigns. It can be any type of interface that will potentially get mapped.
 type InterfaceDevice struct {
-	BindID       int16
+	Active       bool
+	BindID       int
 	DeviceType   int16 // 0 = MIDI
 	HardwareName string
 	FriendlyName string
@@ -33,7 +35,7 @@ type InterfaceDevice struct {
 //InterfaceMessage is an incoming message from any device interface. It serves as the key in the interface - OSC mapping.
 type InterfaceMessage struct {
 	msgType int16 // sametype as InterfaceDevice: 0 = MIDI ...
-	bindID  int16 // same as InterfaceDevice bindID
+	bindID  int   // same as InterfaceDevice bindID
 	channel int32 // MAY HAVE TO CHANGE THAT
 	value   int16 // the value normalized from 0 to 100
 }
@@ -54,8 +56,8 @@ type CliMsg struct {
 
 //WSMsgTemplate represents the type of a message that gets returned from UI. It carries an event and some data.
 type WSMsgTemplate struct {
-	Event string
-	Data  string
+	Event string `json:"Event"`
+	Data  string `json:"Data"`
 }
 
 //GetOSCMessage returns an OSC message ready to get sent.

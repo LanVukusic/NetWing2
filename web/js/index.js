@@ -2,6 +2,10 @@ function addDevice(id, name) {
   $(".devices").append('<li class="device"><span>' + id.toString() + '</span><span>' + name.toString() + '</span><input type="checkbox" name="" id="' + id.toString() + '"></li>');
 }
 
+function addInterfaceInstance (id, Hname, FriendlyName){
+  $(".interfaces_workplace").append('<div class="interface_inst" id ="'+id.toString()+'"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">'+FriendlyName+'</div><div>'+Hname+' : '+id.toString()+'</div></div></div>');
+}
+
 function clearDevices() {
   $(".devices").html("");
 }
@@ -26,7 +30,29 @@ function cliLog(level, type, msg) {
   cli.scrollTop(cli.prop("scrollHeight"))
 }
 
+function updateMIDItable(data) {
+  //populate ins
 
+  if (data.Ins == null) {
+    $("#TableMidiIns").empty();
+    $("#TableMidiIns").append('<div class="deviceTableDevice" ><div>No devices found</div></div>');
+  } else {
+    data.Ins.forEach(function (element) {
+      $("#TableMidiIns").empty();
+      $("#TableMidiIns").append('<div class="deviceTableDevice" id="MidiListDevice"><div>' + element.ID + '</div><div>' + element.Name + '</div></div>');
+    });
+  }
+
+  if (data.Outs == null) {
+    $("#TableMidiOuts").empty();
+    $("#TableMidiOuts").append('<div class="deviceTableDevice"><div>No devices found</div></div>');
+  } else {
+    data.Outs.forEach(function (element) {
+      $("#TableMidiOuts").empty();
+      $("#TableMidiOuts").append('<div class="deviceTableDevice" id="MidiListDevice"><div>' + element.ID + '</div><div>' + element.Name + '</div></div>');
+    });
+  }
+}
 
 let gridSize = 30
 console.log($(".gridster").width());
@@ -44,7 +70,10 @@ let myGrid = $(".gridster").gridster({
 });
 
 var gridster = $(".gridster").gridster().data('gridster');
-gridster.add_widget("<div class='widget'>Test</div>", [5], [6], [0], [0] )
+gridster.add_widget("<div class='widget'>Test</div>", [5], [6], [0], [0])
+
+
+
 
 $(
   $(".side_block").click(function () {
@@ -62,37 +91,39 @@ $(
   }),
 
 
-  $("#RefreshDevice").click(function(){
+  $("#RefreshDevice").click(function () {
     let data = {
-      event : "getMidiDevices"
+      event: "getMidiDevices",
+      data: ""
     }
-    socket.send(JSON.stringify(data))
+    data = JSON.stringify(data)
+    conn.send(data)
   }),
 
-  $("#addInterfaceGenericMIDI").click(function(){
+  $("#addInterfaceGenericMIDI").click(function () {
     $(".modal").removeClass("disabled");
   }),
 
-  $("#closeModal").click(function(){
+  $("#closeModal").click(function () {
     $(".modal").addClass("disabled");
   }),
 
-  $('.devList').on('click', '#MidiListDevice', function() {
+  $('.devList').on('click', '#MidiListDevice', function () {
     $(this).parent().children('div').each(function (i, obj) {
       $(obj).removeClass("selectedDevice")
     });
     $(this).toggleClass("selectedDevice");
   }),
 
-  $("#cli_clear").click(function(){
+  $("#cli_clear").click(function () {
     $(".cli").html("");
   }),
 
-  $("#test").click(function(){
+  $("#test").click(function () {
     cliLog(1, "test", "this is a tasty test")
-  })
-  
-  /* $("#applyDevice").click(function(){
+  }),
+
+  $("#applyDevice").click(function(){
     
     let inDev = null;
     let outDev = null;
@@ -116,20 +147,19 @@ $(
 
     // device types : 0 MIDI, 1 OSC , 2 ART-NET
     data = {
+      event : "addInterface",
       inDevice : inDev,
-      outDevice: outDev,
-      deviceType : 0
+      outDevice : outDev,
+      deviceType : 0,
+      HardwareName: "George",
+      FriendlyName: "lucas"
     }
     // alerts user to select the device
     if(inDev == null || outDev==null){
       $("#noDeviceAlert").removeClass("disabled");
     }else{
-      socket.emit("AddDevice", JSON.stringify(data));
+      conn.send(JSON.stringify(data));
       $(".modal").addClass("disabled");
     }
-  }) */
+  })
 );
-
-
-
-
