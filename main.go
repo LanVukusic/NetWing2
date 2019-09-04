@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"./helpers"
 
@@ -32,6 +33,9 @@ var mainmappings map[helpers.InterfaceMessage]int
 // main device array. supports max of 50 devices
 var mainDeviceList [50]helpers.InterfaceDevice
 
+// mapped interfaces and their bind ids.
+var midi2idMappings [50]helpers.Bind2MIDI
+
 // MIDI stuff
 var drvMIDI connect.Driver
 
@@ -49,15 +53,15 @@ func main() {
 	// packages all static files in one binary
 	boxView = packr.NewBox("./web/view")
 	boxStatic = packr.NewBox("./web/")
-	/* boxStyle = packr.NewBox("./web/style/")
-	boxStatic = packr.NewBox("./web/static/")
-	boxJs = packr.NewBox("./web/js/") */
 
 	mainmappings = make(map[helpers.InterfaceMessage]int)
 
 	// start services
 	fmt.Println("locking Threads")
 	runtime.LockOSThread()
+
+	//start loopcheck to alert for disconnected devices
+	go doEvery(2000*time.Millisecond, loopCheck)
 
 	//init midi
 	drvMIDI = nil
@@ -88,7 +92,8 @@ func main() {
 		cliLog("Engine", "Engine running CLI mode", 0)
 		go func() {
 			for true {
-				// run infinite loop on
+				// run infinite loop so the thread does not terminate
+				//stupid me ofc it terminates.... it runs in a different thread
 			}
 		}()
 	}
@@ -96,6 +101,43 @@ func main() {
 }
 
 // helper functions and whatnot
+func loopCheck() {
+	devices, _ := getMIDIDevices(drvMIDI)
+
+	// check for inputs
+	ins := devices.Ins
+
+	for _, addedIterf := range midi2idMappings {
+		if addedIterf.MidiPort == nil { // check if we are out of interfaces
+			break
+		}
+
+		for _, allIterf := range ins {
+			if addedIterf.MidiPort.String() == allIterf.NameWithID {
+				fmt.Println("Dela", addedIterf.BindID)
+				break
+			} else {
+				fmt.Println("Nedela")
+			}
+		}
+
+	}
+
+}
+
+func doEvery(d time.Duration, f func()) {
+	for range time.Tick(d) {
+		f()
+	}
+}
+
+func addUIdevice(deviceType int16, hName string, fName string, devID int, socket *websocket.Conn) {
+	data := helpers.WSMsgTemplate{
+		Event: "UiAddDevice",
+		Data:  "{'ID':'" + strconv.Itoa(devID) + "','Hname':'" + hName + "','FriendlyName':'" + fName + "'}",
+	}
+	socket.WriteJSON(data)
+}
 
 func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	var raw map[string]interface{}
@@ -115,6 +157,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		break
 	case "addInterface":
 		devType := int(raw["deviceType"].(float64))
+
 		if devType == 0 { // it is a MIDI device
 			var id int
 			id = 100
@@ -125,11 +168,19 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 					// free space in our device array
 					mainDeviceList[i] = helpers.InterfaceDevice{
 						Active:       true,
-						BindID:       id,
+						BindID:       id, // that's the id for the device on the backend. not to be confused with midi ID
 						DeviceType:   0,
 						HardwareName: fmt.Sprintf("%v", raw["HardwareName"]),
 						FriendlyName: fmt.Sprintf("%v", raw["FriendlyName"])}
 					break
+				} else {
+					if interf.HardwareName == raw["HardwareName"] {
+						// device allready exists
+						cliLog("MIDI", "Midi device already active", 1)
+						return
+						break
+
+					}
 				}
 			}
 
@@ -139,7 +190,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			}
 
 			// handle its inputs / outputs
-			ListenMidi(int(raw["inDevice"].(float64)))
+			ListenMidi(int(raw["inDevice"].(float64)), id)
 			hName := fmt.Sprintf("%v", raw["HardwareName"])
 			fName := fmt.Sprintf("%v", raw["FriendlyName"])
 			sID := strconv.Itoa(id)
@@ -149,6 +200,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 				Event: "UiAddDevice",
 				Data:  "{'ID':'" + sID + "','Hname':'" + hName + "','FriendlyName':'" + fName + "'}",
 			}
+
 			// update the UI
 			broadcastMessage(data)
 
@@ -187,6 +239,8 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 			handleWSMessage(messageType, p, wsConnection)
 		}
 	}()
+
+	initializeUi(mainDeviceList[:], wsConnection)
 }
 
 func runWebserver() {
@@ -235,19 +289,21 @@ func getMIDIDevices(drv connect.Driver) (outDevices helpers.MidiPackage, err err
 
 		outDevices.Ins = append(outDevices.Ins, helpers.MidiDevice{
 			// it splits the string by spaces, removeslast slice (the number) and joins it back together to form a string
-			Name: strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
-			ID:   el.Number()})
+			NameWithID: el.String(),
+			Name:       strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
+			ID:         el.Number()})
 	}
 
-	outs, err := drv.Ins()
+	outs, err := drv.Outs()
 	if err != nil {
 		return outDevices, err
 	}
 	for _, el := range outs {
 
 		outDevices.Outs = append(outDevices.Outs, helpers.MidiDevice{
-			Name: strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
-			ID:   el.Number()})
+			NameWithID: el.String(),
+			Name:       strings.Join(strings.Fields(el.String())[:len(strings.Fields(el.String()))-1], ""),
+			ID:         el.Number()})
 	}
 	return outDevices, nil
 }
@@ -262,7 +318,7 @@ func json2text(in interface{}) (out string, err error) {
 }
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
-	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", string(in[1]), string(in[2]), string(deviceID)))
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
 	cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 }
 
@@ -285,13 +341,14 @@ func handleErr(err error, msg string, bcast bool) {
 }
 
 //ListenMidi checks availability and ATTACHES a MIDI listener to the device
-func ListenMidi(id int) {
+func ListenMidi(id int, bind int) (err error) {
 	// check if the MIDI driver is missing
 	if drvMIDI == nil {
 		var err error
 		drvMIDI, err = driver.New()
 		if err != nil {
 			handleErr(err, "Error creating midi driver", true)
+			return err
 		}
 	}
 
@@ -304,10 +361,22 @@ func ListenMidi(id int) {
 		if in.IsOpen() {
 			in.Close()
 		}
+		return err
 	}
+
 	//if the device is successfully opened it tries to attach a listener
 	if in.IsOpen() {
-		err := in.SetListener(handleMidiEvent)
+
+		//add a binding to the monitoring array.
+		for i, interf := range midi2idMappings {
+			if interf.MidiPort == nil {
+				midi2idMappings[i] = helpers.Bind2MIDI{
+					BindID:   bind,
+					MidiPort: in}
+				break
+			}
+		}
+
 		//if unsuccessful, handle the error
 		if err != nil {
 			handleErr(err, "MIDI device:"+string(id)+"cant receive a listener", true)
@@ -316,9 +385,12 @@ func ListenMidi(id int) {
 				in.StopListening()
 				in.Close()
 			}
+		} else {
+			return err
 		}
 	}
 	cliLog("MIDI Interf.", fmt.Sprintf("Listening to MIDI device %v", id), 0)
+	return nil
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
@@ -343,7 +415,9 @@ func handleMIDIevent(data []byte, deltaMicroseconds int64) {
 }
 
 // function loops through devices and initializes their drivers and updates the UI
-func initializeSavedDevices(devlist []helpers.InterfaceDevice) (err error) {
+// TO DO NOT WORKING YET
+func initializeSavedDevices(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
+	active := true
 	for _, device := range devlist {
 		//check for type and create the driver
 		if device.DeviceType == 0 { // it's a MIDI device
@@ -359,16 +433,40 @@ func initializeSavedDevices(devlist []helpers.InterfaceDevice) (err error) {
 			}
 
 			//The driver is active, so assign a listener to the MIDI device.
-			ListenMidi(device.HardwareID)
+			listenErr := ListenMidi(device.HardwareID, device.HardwareID)
+
+			if listenErr != nil {
+				handleErr(listenErr, "unable to listen to device", true)
+				active = false
+			}
 
 		} else {
 			handleErr(nil, "unrecognized device type", true)
 		}
 
 		//update ui
+		addUIdevice(device.DeviceType, device.HardwareName, device.FriendlyName, device.BindID, socket)
 
 		//check if device exists
+		// TO DO , disabled and enabled interfaces
+		fmt.Println(active)
 
+	}
+	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
+	return nil
+}
+
+func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
+	//active := true
+	for _, device := range devlist {
+		//update ui
+		if device.HardwareName != "" {
+			//addUIdevice(device.DeviceType, device.HardwareName, device.FriendlyName, device.BindID, socket)
+			addUIdevice(device.DeviceType, device.HardwareName, device.FriendlyName, device.BindID, socket)
+		}
+
+		//check if device exists
+		// TO DO , disabled and enabled interfaces
 	}
 	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil

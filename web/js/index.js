@@ -127,12 +127,16 @@ $(
     
     let inDev = null;
     let outDev = null;
+    let hNameIn = null;
+    let hNameOut = null;
 
     //get in device
     $("#TableMidiIns").children().each(function (i, obj) {
       //console.log($(obj).attr('class'), $(obj).hasClass("selectedDevice"));
       if($(obj).hasClass("selectedDevice")){
         inDev = i;
+        hNameIn = $(obj).children().eq(1).text()
+
         //return false; // breaks
       }
     });
@@ -140,6 +144,7 @@ $(
     $("#TableMidiOuts").children().each(function (i, obj) {
       if($(obj).hasClass("selectedDevice")){
         outDev = i;
+        hNameOut = $(obj).children().eq(1).text()
         //outDev = $(obj).children('div').eq(1).text();
         //return false; // breaks
       }
@@ -151,8 +156,8 @@ $(
       inDevice : inDev,
       outDevice : outDev,
       deviceType : 0,
-      HardwareName: "George",
-      FriendlyName: "lucas"
+      HardwareName: hNameIn,
+      FriendlyName: $("#dDisplayName").val()
     }
     // alerts user to select the device
     if(inDev == null || outDev==null){

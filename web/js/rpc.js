@@ -21,9 +21,9 @@ if (window["WebSocket"]) {
         updateMIDItable(evt)
         break
       case "UiAddDevice":
-        console.log(evt.Data.replace(/'/g,"\""))
-        evt = JSON.parse(evt.Data.replace(/'/g,"\""))
-        addInterfaceInstance(evt.ID, evt.Hname, evt.FriendlyName)
+        console.log(evt.Data.replace(/'/g,"\""));
+        evt = JSON.parse(evt.Data.replace(/'/g,"\""));
+        addInterfaceInstance(evt.ID, evt.Hname, evt.FriendlyName);
         //addInterfaceInstance(12, "evt.Hname", "evt.FriendlyName")
         $(".modal").addClass("disabled");
         break

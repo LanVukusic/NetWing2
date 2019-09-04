@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"github.com/gomidi/connect"
 	"github.com/zserge/webview"
 )
 
@@ -11,8 +12,9 @@ func Alert(w webview.WebView, text string) {
 
 //MidiDevice is a holder for a midi device that gets sent from BEnd to UI
 type MidiDevice struct {
-	Name string
-	ID   int
+	NameWithID string
+	Name       string
+	ID         int
 }
 
 //MidiPackage holds in and ut devices for updating the UI
@@ -25,11 +27,11 @@ type MidiPackage struct {
 //InterfaceDevice holds a reference to a device that user assigns. It can be any type of interface that will potentially get mapped.
 type InterfaceDevice struct {
 	Active       bool
-	BindID       int
+	BindID       int   // device ID for internal binding. Unique for every interface
 	DeviceType   int16 // 0 = MIDI
 	HardwareName string
 	FriendlyName string
-	HardwareID   int
+	HardwareID   int // let's say 0 as in first midi device
 }
 
 //InterfaceMessage is an incoming message from any device interface. It serves as the key in the interface - OSC mapping.
@@ -58,6 +60,12 @@ type CliMsg struct {
 type WSMsgTemplate struct {
 	Event string `json:"Event"`
 	Data  string `json:"Data"`
+}
+
+//Bind2MIDI will server as a dictionary to map MIDI devices and their bindIDs. Serves for reconnect purposes
+type Bind2MIDI struct {
+	BindID   int
+	MidiPort connect.In
 }
 
 //GetOSCMessage returns an OSC message ready to get sent.
