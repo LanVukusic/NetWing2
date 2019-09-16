@@ -100,6 +100,10 @@ func main() {
 
 }
 
+func midiDisconnected() {
+
+}
+
 // helper functions and whatnot
 func loopCheck() {
 	devices, _ := getMIDIDevices(drvMIDI)
@@ -107,22 +111,22 @@ func loopCheck() {
 	// check for inputs
 	ins := devices.Ins
 
-	for _, addedIterf := range midi2idMappings {
+	for i, addedIterf := range midi2idMappings {
 		if addedIterf.MidiPort == nil { // check if we are out of interfaces
-			break
-		}
-
-		for _, allIterf := range ins {
-			if addedIterf.MidiPort.String() == allIterf.NameWithID {
-				fmt.Println("Dela", addedIterf.BindID)
-				break
-			} else {
-				fmt.Println("Nedela")
+			if i == 0 {
+				//fmt.Println("works")
+				return
 			}
 		}
-
+		for _, allIterf := range ins {
+			if addedIterf.MidiPort.String() == allIterf.NameWithID {
+				fmt.Println("works", addedIterf.BindID)
+				break
+			} else {
+				fmt.Println("works not")
+			}
+		}
 	}
-
 }
 
 func doEvery(d time.Duration, f func()) {
