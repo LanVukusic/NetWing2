@@ -126,7 +126,6 @@ func loopCheck() {
 			if midi2idMappings[i].MidiPort.String() == allIterf.NameWithID { // we found an added device in our connected list
 				enabled = true
 				if !midi2idMappings[i].WasOnline { // device was previously disconnected so we have to reconnect it back
-					fmt.Println("listen agannn", midi2idMappings[i].MidiPort)
 					ListenMidi(&drvMIDI, allIterf.ID, midi2idMappings[i].BindID, false)
 					midi2idMappings[i].WasOnline = true
 				}
@@ -136,9 +135,7 @@ func loopCheck() {
 		if !enabled { // device was not found in active interfaces therefore it is disconnected
 			if midi2idMappings[i].WasOnline { // if device was not disconnected before this function call
 				cliLog("MIDI", fmt.Sprintf("Device disconnected: %s", midi2idMappings[i].MidiPort), 2)
-				//fmt.Println("Disconnected", addedIterf.MidiPort)
 				midi2idMappings[i].WasOnline = false // mark it as disconnected device
-				fmt.Println(midi2idMappings[i].WasOnline)
 			}
 		}
 	}
