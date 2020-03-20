@@ -64,8 +64,9 @@ type WSMsgTemplate struct {
 
 //Bind2MIDI will server as a dictionary to map MIDI devices and their bindIDs. Serves for reconnect purposes
 type Bind2MIDI struct {
-	BindID   int
-	MidiPort connect.In
+	BindID    int
+	MidiPort  connect.In
+	WasOnline bool
 }
 
 //GetOSCMessage returns an OSC message ready to get sent.

@@ -60,7 +60,7 @@ func main() {
 	fmt.Println("locking Threads")
 	runtime.LockOSThread()
 
-	//start loopcheck to alert for disconnected devices
+	// start loopcheck to alert for disconnected devices
 	go doEvery(2000*time.Millisecond, loopCheck)
 
 	//init midi
@@ -85,9 +85,9 @@ func main() {
 			URL:       "http://localhost/ui/",
 			Resizable: true,
 		})
-		cliLog("Engine", "Engine running GUI mode", 0)
 		defer wb.Exit()
 		wb.Run()
+		cliLog("Engine", "Engine running GUI mode", 0)
 	} else {
 		cliLog("Engine", "Engine running CLI mode", 0)
 		go func() {
@@ -100,33 +100,49 @@ func main() {
 
 }
 
+// TO DO
+// GETS CALLED WHEN DEVICE DISCONNECT IS DETECTED
 func midiDisconnected() {
 
 }
 
 // helper functions and whatnot
 func loopCheck() {
-	devices, _ := getMIDIDevices(drvMIDI)
+	devices, _ := getMIDIDevices(&drvMIDI)
 
 	// check for inputs
 	ins := devices.Ins
 
-	for i, addedIterf := range midi2idMappings {
-		if addedIterf.MidiPort == nil { // check if we are out of interfaces
-			if i == 0 {
-				//fmt.Println("works")
-				return
+	for i := range midi2idMappings { // search through all added interfaces
+		if midi2idMappings[i].MidiPort == nil { // check if we are out of interfaces
+			break
+		}
+		/* fmt.Println(ins)
+		fmt.Println(addedIterf[]) */
+
+		var enabled = false
+
+		for _, allIterf := range ins { // compare the added interface t osee if you can see it in available device list
+			if midi2idMappings[i].MidiPort.String() == allIterf.NameWithID { // we found an added device in our connected list
+				enabled = true
+				if !midi2idMappings[i].WasOnline { // device was previously disconnected so we have to reconnect it back
+					fmt.Println("listen agannn", midi2idMappings[i].MidiPort)
+					ListenMidi(&drvMIDI, allIterf.ID, midi2idMappings[i].BindID, false)
+					midi2idMappings[i].WasOnline = true
+				}
+				break
 			}
 		}
-		for _, allIterf := range ins {
-			if addedIterf.MidiPort.String() == allIterf.NameWithID {
-				fmt.Println("works", addedIterf.BindID)
-				break
-			} else {
-				fmt.Println("works not")
+		if !enabled { // device was not found in active interfaces therefore it is disconnected
+			if midi2idMappings[i].WasOnline { // if device was not disconnected before this function call
+				cliLog("MIDI", fmt.Sprintf("Device disconnected: %s", midi2idMappings[i].MidiPort), 2)
+				//fmt.Println("Disconnected", addedIterf.MidiPort)
+				midi2idMappings[i].WasOnline = false // mark it as disconnected device
+				fmt.Println(midi2idMappings[i].WasOnline)
 			}
 		}
 	}
+	return
 }
 
 func doEvery(d time.Duration, f func()) {
@@ -152,7 +168,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 
 	switch raw["event"] {
 	case "getMidiDevices":
-		data, err := getMIDIDevices(drvMIDI)
+		data, err := getMIDIDevices(&drvMIDI)
 		if err != nil {
 			handleErr(err, "Error while getting MIDI devices", true)
 		} else {
@@ -182,8 +198,6 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 						// device allready exists
 						cliLog("MIDI", "Midi device already active", 1)
 						return
-						break
-
 					}
 				}
 			}
@@ -194,7 +208,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			}
 
 			// handle its inputs / outputs
-			ListenMidi(int(raw["inDevice"].(float64)), id)
+			ListenMidi(&drvMIDI, int(raw["inDevice"].(float64)), id, true)
 			hName := fmt.Sprintf("%v", raw["HardwareName"])
 			fName := fmt.Sprintf("%v", raw["FriendlyName"])
 			sID := strconv.Itoa(id)
@@ -273,24 +287,30 @@ func runWebserver() {
 	http.ListenAndServe(":80", nil)
 }
 
-func getMIDIDevices(drv connect.Driver) (outDevices helpers.MidiPackage, err error) {
+func getMIDIDevices(drv *connect.Driver) (outDevices helpers.MidiPackage, err error) {
 	outDevices.Event = "refreshMidiRet"
-	if drv == nil {
-		drv, err = driver.New()
+
+	// does not get inputs, aka an error
+	if *drv == nil { // if driver does not exist yet, we create the new driver
+		cliLog("MIDI", "No active Midi driver", 1)
+		*drv, err = driver.New()
 		if err != nil {
 			handleErr(err, "Failed creation of MIDI device driver.", true)
-			return
+			return outDevices, err
 		}
+		cliLog("MIDI", "MIDI driver activated", 0)
 	}
 
-	//gets the inputs
-	ins, err := drv.Ins()
-	if err != nil {
+	var tempDrv = *drv // use the drivers value and not the pointer from that point on
+
+	// gets the inputs
+	ins, err := tempDrv.Ins()
+	if err != nil { // handle the error
+		handleErr(err, "Error receiving midi device list", true)
 		return outDevices, err
 	}
 
 	for _, el := range ins {
-
 		outDevices.Ins = append(outDevices.Ins, helpers.MidiDevice{
 			// it splits the string by spaces, removeslast slice (the number) and joins it back together to form a string
 			NameWithID: el.String(),
@@ -298,7 +318,7 @@ func getMIDIDevices(drv connect.Driver) (outDevices helpers.MidiPackage, err err
 			ID:         el.Number()})
 	}
 
-	outs, err := drv.Outs()
+	outs, err := tempDrv.Outs()
 	if err != nil {
 		return outDevices, err
 	}
@@ -334,6 +354,8 @@ func cliLog(cause string, body string, threatLevel int) {
 		ThreatLevel: threatLevel,
 	}
 	broadcastMessage(alert)
+	fmt.Println(alert)
+	return
 }
 
 func handleErr(err error, msg string, bcast bool) {
@@ -345,22 +367,23 @@ func handleErr(err error, msg string, bcast bool) {
 }
 
 //ListenMidi checks availability and ATTACHES a MIDI listener to the device
-func ListenMidi(id int, bind int) (err error) {
-	// check if the MIDI driver is missing
-	if drvMIDI == nil {
-		var err error
-		drvMIDI, err = driver.New()
+func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err error) {
+	// first check for existence of MIDI driver
+	if *drv == nil { // if driver does not exist yet, we create the new driver
+		cliLog("MIDI", "No active Midi driver  ... activating", 1)
+		*drv, err = driver.New()
 		if err != nil {
-			handleErr(err, "Error creating midi driver", true)
+			handleErr(err, "Failed creation of MIDI device driver.", true)
 			return err
 		}
+		cliLog("MIDI", "MIDI driver activated", 0)
 	}
 
 	// this line gets the device "id" from the driver, opens it and returns the active device
 	in, err := connect.OpenIn(drvMIDI, id, "")
 
 	//handles the potential error
-	if err != nil {
+	if err != nil { // if error exists, handle it and return
 		handleErr(err, "MIDI device:"+string(id)+"is unavailable", true)
 		if in.IsOpen() {
 			in.Close()
@@ -370,31 +393,39 @@ func ListenMidi(id int, bind int) (err error) {
 
 	//if the device is successfully opened it tries to attach a listener
 	if in.IsOpen() {
-
 		//add a binding to the monitoring array.
-		for i, interf := range midi2idMappings {
-			if interf.MidiPort == nil {
-				midi2idMappings[i] = helpers.Bind2MIDI{
-					BindID:   bind,
-					MidiPort: in}
-				break
+		if newDevice {
+			for i, interf := range midi2idMappings {
+				if interf.MidiPort == nil { // finds the first empty entry in an array
+					midi2idMappings[i] = helpers.Bind2MIDI{ // assign it the object with the device
+						BindID:    bind,
+						MidiPort:  in,
+						WasOnline: true}
+					break
+				}
 			}
 		}
 
-		//if unsuccessful, handle the error
-		if err != nil {
+		// set a listener to the device
+		err := in.SetListener(handleMidiEvent)
+
+		// check for potential errors
+		if err != nil { // if unsuccessful, handle the error
 			handleErr(err, "MIDI device:"+string(id)+"cant receive a listener", true)
 			if in.IsOpen() {
 				//stop the device
 				in.StopListening()
 				in.Close()
 			}
-		} else {
 			return err
+		} else {
+			cliLog("MIDI", fmt.Sprintf("Listening to MIDI device %v", id), 0)
+			return nil
 		}
+	} else {
+		cliLog("MIDI", "Midi device is not open", 2)
+		return nil
 	}
-	cliLog("MIDI Interf.", fmt.Sprintf("Listening to MIDI device %v", id), 0)
-	return nil
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
@@ -431,13 +462,13 @@ func initializeSavedDevices(devlist []helpers.InterfaceDevice, socket *websocket
 				var err error
 				drvMIDI, err = driver.New()
 				if err != nil {
-					handleErr(err, "cant create MIDI driver", true)
+					handleErr(err, "cant create MIDI driver ... activating", true)
 					return err
 				}
 			}
 
 			//The driver is active, so assign a listener to the MIDI device.
-			listenErr := ListenMidi(device.HardwareID, device.HardwareID)
+			listenErr := ListenMidi(&drvMIDI, device.HardwareID, device.HardwareID, true)
 
 			if listenErr != nil {
 				handleErr(listenErr, "unable to listen to device", true)
