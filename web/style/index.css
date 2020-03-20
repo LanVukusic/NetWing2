@@ -11,6 +11,7 @@
 
 
 body {
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   width: 100vw;
@@ -284,8 +285,9 @@ button:hover{
 
 .cli_housing{
   width: 100vw;
-  flex: 2 2 30px;
+  flex: 3;
   display: flex;
+  overflow: hidden;
 }
 
 .cli_tools{
@@ -302,10 +304,9 @@ button:hover{
 .cli {
   flex: 10;
   background-color: #282f44;
-  height: 100%;
-  overflow-y: scroll;
   font-size: 1.1em;
   color: white;
+  overflow-y: scroll;
 }
 
 .cli_line {
@@ -436,7 +437,33 @@ button:hover{
   border-left: solid 10px #61f57a;
 }
 
+::-webkit-scrollbar
+{
+	width: 8px;
+}
 
+::-webkit-scrollbar-track
+{
+	background: #e6c04f;
+}
+
+::-webkit-scrollbar-thumb
+{
+	background: #645f5f99;
+}
+
+::-webkit-scrollbar-thumb:hover
+{
+	background: #353535;
+}
+
+
+#nav-drawer,
+html
+{
+	scrollbar-width: thin;
+	scrollbar-color: #403e3e #f5d061;
+}
 
 
 
