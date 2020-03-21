@@ -449,12 +449,12 @@ button:hover{
 
 ::-webkit-scrollbar-thumb
 {
-	background: #645f5f99;
+	background: #ffffff6b;
 }
 
 ::-webkit-scrollbar-thumb:hover
 {
-	background: #353535;
+	background: #ffffffaf;
 }
 
 

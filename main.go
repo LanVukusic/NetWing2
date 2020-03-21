@@ -415,14 +415,14 @@ func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err erro
 				in.Close()
 			}
 			return err
-		} else {
-			cliLog("MIDI", fmt.Sprintf("Listening to MIDI device %v", id), 0)
-			return nil
 		}
-	} else {
-		cliLog("MIDI", "Midi device is not open", 2)
+		cliLog("MIDI", fmt.Sprintf("Listening to MIDI device %v", id), 0)
 		return nil
+
 	}
+	cliLog("MIDI", "Midi device is not open", 2)
+	return nil
+
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
