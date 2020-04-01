@@ -2,8 +2,12 @@ function addDevice(id, name) {
   $(".devices").append('<li class="device"><span>' + id.toString() + '</span><span>' + name.toString() + '</span><input type="checkbox" name="" id="' + id.toString() + '"></li>');
 }
 
-function addInterfaceInstance (id, Hname, FriendlyName){
-  $(".interfaces_workplace").append('<div class="interface_inst" id ="'+id.toString()+'"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">'+FriendlyName+'</div><div>'+Hname+' : '+id.toString()+'</div></div></div>');
+function addInterfaceInstance(id, Hname, FriendlyName) {
+  $(".interfaces_workplace").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
+}
+
+function addFaderInstance(fader_channel, midi_chan) {
+  $(".faders_holder").append('<div class="fader"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="100" min="0" class="slider"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
 }
 
 function clearDevices() {
@@ -54,34 +58,14 @@ function updateMIDItable(data) {
   }
 }
 
-let gridSize = 30
-console.log($(".gridster").width());
-console.log($(".gridster").height());
-
-let myGrid = $(".gridster").gridster({
-  widget_margins: [0, 0],
-  widget_base_dimensions: [gridSize, gridSize],
-  widget_selector: ".widget",
-  shift_widgets_up: false,
-  min_cols: Math.floor($(".gridster").width() / gridSize),
-  max_cols: Math.floor($(".gridster").width() / gridSize),
-  min_rows: Math.floor($(".gridster").height() / gridSize),
-  max_rows: Math.floor($(".gridster").height() / gridSize)
-});
-
-var gridster = $(".gridster").gridster().data('gridster');
-gridster.add_widget("<div class='widget'>Test</div>", [5], [6], [0], [0])
-
-
-
-
 $(
   $(".side_block").click(function () {
+
     // update main look
     $('.main_window').each(function (i, obj) {
-      $(obj).addClass("none")
+      $(obj).addClass("disabled")
     });
-    $(".main_" + $(this).text().toString().toLowerCase()).removeClass("none")
+    $(".main_" + $(this).text().toString().toLowerCase()).removeClass("disabled")
 
     //update menu look
     $('.side_block').each(function (i, obj) {
@@ -101,11 +85,15 @@ $(
   }),
 
   $("#addInterfaceGenericMIDI").click(function () {
-    $(".modal").removeClass("disabled");
+    $(".modal_interfaces").removeClass("disabled");
   }),
 
   $("#closeModal").click(function () {
-    $(".modal").addClass("disabled");
+    $(".modal_faders").addClass("disabled");
+  }),
+
+  $("#closeModalInterf").click(function () {
+    $(".modal_interfaces").addClass("disabled");
   }),
 
   $('.devList').on('click', '#MidiListDevice', function () {
@@ -123,8 +111,46 @@ $(
     cliLog(1, "test", "this is a tasty test")
   }),
 
-  $("#applyDevice").click(function(){
+  $("#execs-add-fader").click(function () {
+    $("#fader_span_title").html(": New");
+    $("#fader_label_status").html("unmapped");
+    $("#fader_label_midi_chn").html("/");
+    $("#execs-modal").removeClass("disabled");
+  }),
+
+  $("#fader-edit-button").click(function () {
+    let faderID = $(this).parent().find('#fader-label-exec').html();
+    let faderMIDI = $(this).parent().find('#fader-label-midi').html();
+    $("#fader_span_title").html(" : "+faderID);
+    $("#fader_input_num").val(faderID);
+    $("#fader_label_status").html("mapped");
+    $("#fader_label_midi_chn").html(faderMIDI);
+    $("#execs-modal").removeClass("disabled");
+  }),
+
+  $("#fader-update-button").click(function () {
+    let fader_channel = $("#fader_input_num").val(); // fader number on Magicq
+    let midi_chan = 1.25; // MIDI channel that is mapped to the fader
+
+    if (midi_chan != 0) {
+      addFaderInstance(fader_channel, midi_chan);
+    }
     
+    // close the window
+    $("#execs-modal").addClass("disabled");
+  }),
+
+  $("#fader-learn-button").click(function () {
+    // transmit the listening mode to the server
+    data = {
+      event: "changeMIDImode"
+    }
+    conn.send(JSON.stringify(data));
+
+  }),
+
+  $("#applyDevice").click(function () {
+
     let inDev = null;
     let outDev = null;
     let hNameIn = null;
@@ -133,7 +159,7 @@ $(
     //get in device
     $("#TableMidiIns").children().each(function (i, obj) {
       //console.log($(obj).attr('class'), $(obj).hasClass("selectedDevice"));
-      if($(obj).hasClass("selectedDevice")){
+      if ($(obj).hasClass("selectedDevice")) {
         inDev = i;
         hNameIn = $(obj).children().eq(1).text()
 
@@ -142,7 +168,7 @@ $(
     });
     //get out device
     $("#TableMidiOuts").children().each(function (i, obj) {
-      if($(obj).hasClass("selectedDevice")){
+      if ($(obj).hasClass("selectedDevice")) {
         outDev = i;
         hNameOut = $(obj).children().eq(1).text()
         //outDev = $(obj).children('div').eq(1).text();
@@ -150,21 +176,26 @@ $(
       }
     });
 
+
+
+
     // device types : 0 MIDI, 1 OSC , 2 ART-NET
     data = {
-      event : "addInterface",
-      inDevice : inDev,
-      outDevice : outDev,
-      deviceType : 0,
+      event: "addInterface",
+      inDevice: inDev,
+      outDevice: outDev,
+      deviceType: 0,
       HardwareName: hNameIn,
       FriendlyName: $("#dDisplayName").val()
     }
+
     // alerts user to select the device
-    if(inDev == null || outDev==null){
+    if (inDev == null || outDev == null) {
       $("#noDeviceAlert").removeClass("disabled");
-    }else{
+    } else {
       conn.send(JSON.stringify(data));
       $(".modal").addClass("disabled");
     }
   })
+
 );

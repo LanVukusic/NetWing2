@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 
 <head>
-  <link rel="stylesheet" href="/assets/static/jquery.gridster.min.css" />
   <link rel="stylesheet" href="/assets/style/index.css">
-  
+  <link rel="stylesheet" href="../style/index.css">
+
 </head>
 
 <body>
@@ -15,22 +15,18 @@
   <div class="up">
     <div class="side">
       <div class="side_block block_active">Interfaces</div>
-      <div class="side_block">Links</div>
+      <div class="side_block">Execs</div>
       <!-- <div class="side_block">Views</div>
       <div class="side_block">Users</div> -->
     </div>
 
     <div class="main">
 
-      <div class="main_window main_views gridster disabled">
-        main_views
-      </div>
-
       <div class="main_window main_interfaces">
         <div class="interfaces_workplace doted">
           <div class="settings_nav">
             <span>Active interfaces</span>
-           <!--  <span>+</span> -->
+            <!--  <span>+</span> -->
           </div>
 
           <!-- The place where interface instances are added -->
@@ -56,6 +52,29 @@
         </div>
       </div>
 
+      <div class="main_window main_execs disabled">
+        <div class="interfaces_workplace doted execs_workplace">
+
+          <div class="settings_nav">
+            <span>Active faders</span>
+            <span id="execs-add-fader">[A]dd</span>
+          </div>
+          <div class="faders_holder">
+
+            <!-- The place where exec instances are added -->
+            <!-- <div class="fader">
+              <button id="fader-edit-button">edit</button>
+              <input disabled="" type="range" orient="vertical" max="100" min="0" class="slider">
+              <div>
+                <span><span>MIDI:</span><i id="fader-label-midi">0.07</i></span>
+                <span>Exec:<i id="fader-label-exec">3</i></span>
+              </div>
+            </div> -->
+
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -73,38 +92,33 @@
       <button id="test">Autoscroll</button>
     </div>
   </div>
-  
-  <div class="modal disabled">
+
+  <div class="modal disabled modal_interfaces">
     <div class="window">
       <div class="modalNav">
         <div>Settings</div>
-        <div id="closeModal" class="navBtn">[Esc]</div>
+        <div id="closeModalInterf" class="navBtn">[Esc]</div>
       </div>
       <div class="modalBody">
         <span>Generic MIDI</span>
-
         <div class="name">
           <span>Device display name</span>
           <input type="text" id="dDisplayName">
         </div>
-
-
         <div class="devList">
           <div class="devicesTable">
             <div class="devicesTableTitle">Set input device</div>
             <div class="devicesTableBody" id="TableMidiIns">
               <!-- devices go in here -->
-
             </div>
           </div>
           <div class="devicesTable outs">
             <div class="devicesTableTitle">Set output device</div>
             <div class="devicesTableBody" id="TableMidiOuts">
               <!-- devices go in here -->
-
             </div>
 
-            
+
           </div>
         </div>
 
@@ -126,11 +140,42 @@
     </div>
   </div>
 
+
+  <div class="modal disabled modal_faders" id="execs-modal">
+    <div class="window window_execs">
+      <div class="modalNav">
+        <div>Fader
+          <span id="fader_span_title">:10</span>
+        </div>
+        <div id="closeModal" class="navBtn">[Esc]</div>
+      </div>
+      <div class="modalBody">
+        <span>Fader settings</span>
+        <div class="execs_settings_table">
+          <div class="left">
+            <span>Fader:<input type="number" min="0" id="fader_input_num" value="0"></span>
+            <br>
+            <span>MIDI in: <i></i> <label id="fader_label_midi_chn">/a</label> </span>
+            <br>
+            <span>status: <i><label id="fader_label_status">mappeda</label></i></span>
+          </div>
+          <div class="right">
+            <button id="fader-learn-button">Learn</button>
+            <button id="fader-update-button" disabled>Update</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 <script src="/assets/static/jquerry.js"></script>
-<script src="/assets/static/jquery.gridster.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/web-socket-js/1.0.0/web_socket.js"></script>
 <script src="/assets/js/index.js"></script>
 <script src="/assets/js/rpc.js"></script>
+
+<script src="../static/jquerry.js"></script>
+<script src="../js/index.js"></script>
+<script src="../js/rpc.js"></script>
 
 </html>

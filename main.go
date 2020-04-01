@@ -20,6 +20,8 @@ import (
 
 	"github.com/zserge/webview"
 )
+//globals
+var MIDIListenMode // true:active interface, false:binding interface
 
 // packeging
 var boxView packr.Box
@@ -43,7 +45,6 @@ var drvMIDI connect.Driver
 var upgrader websocket.Upgrader
 var wsConnections []*websocket.Conn // supports max 30 clients
 
-// main
 func main() {
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -65,6 +66,7 @@ func main() {
 
 	//init midi
 	drvMIDI = nil
+	MIDIListenMode = false
 
 	/* //start OSC
 	fmt.Println("Starting OSC")
@@ -164,6 +166,8 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	}
 
 	switch raw["event"] {
+	
+	// command for getting a list of active devices
 	case "getMidiDevices":
 		data, err := getMIDIDevices(&drvMIDI)
 		if err != nil {
@@ -172,6 +176,12 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			socket.WriteJSON(data)
 		}
 		break
+
+	// command for setting midi mode to bidning
+	case "changeMIDImode":  // changes midi mode to BIND
+		fmt.Println("msg recieved BINDING active")
+		break
+
 	case "addInterface":
 		devType := int(raw["deviceType"].(float64))
 
@@ -339,8 +349,17 @@ func json2text(in interface{}) (out string, err error) {
 }
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
-	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
-	cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+	if MIDIListenMode {
+		// active interface mode
+		fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+		cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+	} else {
+		// binding interface mode
+		fmt.Println("BIND")
+		fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+		cliLog("MIDI", fmt.Sprintf("BINDING Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+	}
+
 }
 
 func cliLog(cause string, body string, threatLevel int) {
