@@ -23,7 +23,7 @@
     <div class="main">
 
       <div class="main_window main_interfaces">
-        <div class="interfaces_workplace doted">
+        <div class="interfaces_workplace doted" id="interface-space">
           <div class="settings_nav">
             <span>Active interfaces</span>
             <!--  <span>+</span> -->
@@ -103,7 +103,7 @@
         <span>Generic MIDI</span>
         <div class="name">
           <span>Device display name</span>
-          <input type="text" id="dDisplayName">
+          <input type="text" id="dDisplayName" value="New MIDI device">
         </div>
         <div class="devList">
           <div class="devicesTable">
@@ -155,9 +155,9 @@
           <div class="left">
             <span>Fader:<input type="number" min="0" id="fader_input_num" value="0"></span>
             <br>
-            <span>MIDI in: <i></i> <label id="fader_label_midi_chn">/a</label> </span>
+            <span>MIDI in: <i></i> <label id="fader_label_midi_chn">/</label> </span>
             <br>
-            <span>status: <i><label id="fader_label_status">mappeda</label></i></span>
+            <span>status: <i><label id="fader_label_status">unmapped</label></i></span>
           </div>
           <div class="right">
             <button id="fader-learn-button">Learn</button>

@@ -12,7 +12,6 @@ if (window["WebSocket"]) {
 
   conn.onmessage = function (evt) {
     evt = JSON.parse(evt.data)
-    console.log(evt)
     switch(evt.Event){
       case "cli":
         cliLog(evt.ThreatLevel, evt.Cause, evt.Body)
@@ -21,12 +20,19 @@ if (window["WebSocket"]) {
         updateMIDItable(evt)
         break
       case "UiAddDevice":
-        console.log(evt.Data.replace(/'/g,"\""));
         evt = JSON.parse(evt.Data.replace(/'/g,"\""));
         addInterfaceInstance(evt.ID, evt.Hname, evt.FriendlyName);
-        //addInterfaceInstance(12, "evt.Hname", "evt.FriendlyName")
         $(".modal").addClass("disabled");
         break
+      case "learnMidiRet":
+        //evt = JSON.parse(evt.Data.replace(/'/g,"\""));
+        setMIDILearnFader(evt.DeviceID, evt.ChannelID);
+        break
+      case "MappingsResponse":
+        addFaderInstance(evt.FaderID, `${evt.DeviceID}.${evt.ChannelID}`)
+        break
+      case "UpdateFader":
+        $("#fader"+evt.FaderID).val(parseInt(evt.Value));
     }
   }
 } else {

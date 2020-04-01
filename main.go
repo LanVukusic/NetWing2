@@ -20,8 +20,10 @@ import (
 
 	"github.com/zserge/webview"
 )
-//globals
-var MIDIListenMode // true:active interface, false:binding interface
+
+// globals
+var MIDIListenMode bool // true:active interface, false:binding interface
+var mappings map[helpers.InternalDevice]helpers.InternalOutput
 
 // packeging
 var boxView packr.Box
@@ -46,6 +48,11 @@ var upgrader websocket.Upgrader
 var wsConnections []*websocket.Conn // supports max 30 clients
 
 func main() {
+	//init midi
+	drvMIDI = nil
+	MIDIListenMode = false
+	mappings = make(map[helpers.InternalDevice]helpers.InternalOutput)
+
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -64,10 +71,6 @@ func main() {
 	// start loopcheck to alert for disconnected devices
 	go doEvery(2000*time.Millisecond, loopCheck)
 
-	//init midi
-	drvMIDI = nil
-	MIDIListenMode = false
-
 	/* //start OSC
 	fmt.Println("Starting OSC")
 	osclib.StartOSCServer() */
@@ -77,35 +80,18 @@ func main() {
 	go runWebserver()
 
 	// web view settings
-	if true {
-		fmt.Println("Starting webview")
-		wb := webview.New(webview.Settings{
-			Width:  1400,
-			Height: 800,
-			Title:  "NetWing",
-			/* URL:                    "file://" + rootDirectory + "/web/view/index.html", */
-			URL:       "http://localhost/ui/",
-			Resizable: true,
-		})
-		defer wb.Exit()
-		wb.Run()
-		cliLog("Engine", "Engine running GUI mode", 0)
-	} else {
-		cliLog("Engine", "Engine running CLI mode", 0)
-		go func() {
-			for true {
-				// run infinite loop so the thread does not terminate
-				//stupid me ofc it terminates.... it runs in a different thread
-			}
-		}()
-	}
-
-}
-
-// TO DO
-// GETS CALLED WHEN DEVICE DISCONNECT IS DETECTED
-func midiDisconnected() {
-
+	fmt.Println("Starting webview")
+	wb := webview.New(webview.Settings{
+		Width:  1400,
+		Height: 800,
+		Title:  "NetWing",
+		/* URL:                    "file://" + rootDirectory + "/web/view/index.html", */
+		URL:       "http://localhost/ui/",
+		Resizable: true,
+	})
+	defer wb.Exit()
+	wb.Run()
+	cliLog("Engine", "Engine running GUI mode", 0)
 }
 
 // helper functions and whatnot
@@ -164,9 +150,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	if err != nil {
 		handleErr(err, fmt.Sprintf("Error while parsing JSON from %s", socket.LocalAddr().String()), true)
 	}
-
 	switch raw["event"] {
-	
 	// command for getting a list of active devices
 	case "getMidiDevices":
 		data, err := getMIDIDevices(&drvMIDI)
@@ -177,9 +161,10 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		}
 		break
 
-	// command for setting midi mode to bidning
-	case "changeMIDImode":  // changes midi mode to BIND
-		fmt.Println("msg recieved BINDING active")
+	// command for setting midi mode to binding
+	case "changeMIDImode": // changes midi mode to BIND
+		fmt.Println("msg received BINDING active")
+		MIDIListenMode = false
 		break
 
 	case "addInterface":
@@ -230,6 +215,32 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			broadcastMessage(data)
 
 		}
+	case "bindMIDIchannel":
+		// future me will be thankful: https://blog.golang.org/maps
+		// create an internal mapping
+
+		temp := helpers.InternalDevice{
+			InterfaceType: 0,
+			DeviceID:      int(raw["device"].(float64)),
+			ChannelID:     byte(raw["chn"].(float64)),
+		}
+
+		// add an entry to the mappings array
+		mappings[temp] = helpers.InternalOutput{
+			OutType: raw["extType"].(float64), // that's a fader
+			OutChan: int(raw["extChn"].(float64)),
+		}
+
+		// respond with permission to create UI fader
+		data := helpers.MappingResponse{
+			Event:     "MappingsResponse",
+			DeviceID:  int(raw["device"].(float64)),
+			ChannelID: byte(raw["chn"].(float64)),
+			FaderID:   int(raw["extChn"].(float64)),
+		}
+
+		socket.WriteJSON(data)
+		break
 	}
 
 }
@@ -351,15 +362,38 @@ func json2text(in interface{}) (out string, err error) {
 func handleMidiEvent(in []byte, time int64, deviceID int) {
 	if MIDIListenMode {
 		// active interface mode
-		fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
-		cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+		/* fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+		cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0) */
+		tempIn := helpers.InternalDevice{
+			InterfaceType: 0, // MIDI = 0
+			DeviceID:      deviceID,
+			ChannelID:     in[1],
+		}
+		tempOut, exists := mappings[tempIn]
+
+		if exists {
+			//fmt.Println("BOUND", tempOut, in[2])
+			temp := helpers.FaderUpdate{
+				Event:   "UpdateFader",
+				FaderID: tempOut.OutChan,
+				Value:   in[2],
+			}
+			broadcastMessage(temp)
+		} else {
+			fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+			cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+		}
+
 	} else {
 		// binding interface mode
-		fmt.Println("BIND")
-		fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
-		cliLog("MIDI", fmt.Sprintf("BINDING Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+		temp := helpers.MIDILearnMessage{
+			Event:     "learnMidiRet",
+			DeviceID:  deviceID,
+			ChannelID: in[1],
+		}
+		broadcastMessage(temp)
+		MIDIListenMode = true // exit midi mapping mode
 	}
-
 }
 
 func cliLog(cause string, body string, threatLevel int) {

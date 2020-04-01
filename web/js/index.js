@@ -3,11 +3,11 @@ function addDevice(id, name) {
 }
 
 function addInterfaceInstance(id, Hname, FriendlyName) {
-  $(".interfaces_workplace").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
+  $("#interface-space").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
 }
 
 function addFaderInstance(fader_channel, midi_chan) {
-  $(".faders_holder").append('<div class="fader"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="100" min="0" class="slider"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
+  $(".faders_holder").append('<div class="fader"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader'+fader_channel+'"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
 }
 
 function clearDevices() {
@@ -16,9 +16,9 @@ function clearDevices() {
 
 function cliLog(level, type, msg) {
   let time = new Date()
-  let timeFormated = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + "." + time.getMilliseconds().toString()
+  let timeFormatted = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + "." + time.getMilliseconds().toString()
   let cli = $("#cliLog")
-  let message = $('<div class="cli_line"><div class="cli_time_stamp">' + timeFormated + '</div><div class="cli_type">' + type + '</div><div class="cli_body">' + msg + '</div></div>');
+  let message = $('<div class="cli_line"><div class="cli_time_stamp">' + timeFormatted + '</div><div class="cli_type">' + type + '</div><div class="cli_body">' + msg + '</div></div>');
 
   if (level == 0) {
     //ok
@@ -56,6 +56,13 @@ function updateMIDItable(data) {
       $("#TableMidiOuts").append('<div class="deviceTableDevice" id="MidiListDevice"><div>' + element.ID + '</div><div>' + element.Name + '</div></div>');
     });
   }
+}
+
+function setMIDILearnFader(device, channel){
+  console.log(device, channel);
+  $("#fader_label_status").html("mapped");
+  $("#fader_label_midi_chn").html(""+device+"."+channel);
+  $("#fader-update-button").prop('disabled', false);
 }
 
 $(
@@ -130,11 +137,21 @@ $(
 
   $("#fader-update-button").click(function () {
     let fader_channel = $("#fader_input_num").val(); // fader number on Magicq
-    let midi_chan = 1.25; // MIDI channel that is mapped to the fader
+    let midi_chan = $("#fader_label_midi_chn").html(); // MIDI channel that is mapped to the fader
 
-    if (midi_chan != 0) {
+    /* if (midi_chan != 0) {
       addFaderInstance(fader_channel, midi_chan);
+    } */
+
+    data = {
+      event: "bindMIDIchannel",
+      device: Math.floor(parseInt(midi_chan)),
+      chn: parseInt(midi_chan.split('.')[1]),
+      extChn: parseInt(fader_channel),
+      extType: 0 // 0 = fader
     }
+
+    conn.send(JSON.stringify(data))
     
     // close the window
     $("#execs-modal").addClass("disabled");
@@ -146,7 +163,6 @@ $(
       event: "changeMIDImode"
     }
     conn.send(JSON.stringify(data));
-
   }),
 
   $("#applyDevice").click(function () {
