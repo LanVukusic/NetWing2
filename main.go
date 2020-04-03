@@ -286,6 +286,16 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 		for {
 			messageType, p, err := wsConnection.ReadMessage()
 			if err != nil {
+				if strings.Contains(err.Error(), "close 1001 (going away)") {
+					cliLog("NET", "Disconnect! Bye bye "+wsConnection.LocalAddr().String(), 1)
+					for i := 0; i < len(wsConnections); i++ {
+						if wsConnections[i] == wsConnection {
+							// we have found the faulty connection, so we remove it to prevent faulty broadcasting
+							wsConnections = append((wsConnections)[:i], wsConnections[i+1:]...)
+							return
+						}
+					}
+				}
 				handleErr(err, "Websocket message reading error for: "+wsConnection.LocalAddr().String(), true)
 				return
 			}
@@ -378,9 +388,7 @@ func json2text(in interface{}) (out string, err error) {
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
 	if MIDIListenMode {
-		// active interface mode
-		/* fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
-		cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0) */
+		// input has an active binding
 		tempIn := helpers.InternalDevice{
 			InterfaceType: 0, // MIDI = 0
 			DeviceID:      deviceID,
@@ -397,6 +405,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 			}
 			broadcastMessage(temp)
 		} else {
+			// input has no active binding
 			fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
 			cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 		}

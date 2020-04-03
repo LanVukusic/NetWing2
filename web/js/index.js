@@ -65,7 +65,6 @@ function updateMIDItable(data) {
 }
 
 function setMIDILearnFader(device, channel){
-  console.log(device, channel);
   $("#fader_label_status").html("mapped");
   $("#fader_label_midi_chn").html(""+device+"."+channel);
   $("#fader-update-button").prop('disabled', false);
