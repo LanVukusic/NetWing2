@@ -507,6 +507,11 @@ input[type=number]{
   flex-direction: row;
 }
 
+.fader-exists-error{
+  padding: 3px 10px;
+  border-left: solid 10px #f56161;
+}
+
 .devicesTable {
   margin: 10px 20px;
   width: 20vw;

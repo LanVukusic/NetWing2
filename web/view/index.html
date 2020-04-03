@@ -141,7 +141,7 @@
   </div>
 
 
-  <div class="modal disabled modal_faders" id="execs-modal">
+  <div class="modal modal_faders" id="execs-modal">
     <div class="window window_execs">
       <div class="modalNav">
         <div>Fader
@@ -151,6 +151,7 @@
       </div>
       <div class="modalBody">
         <span>Fader settings</span>
+        <i class="fader-exists-error disabled" id="fader-exists-error">Fader with that id already exists</i>
         <div class="execs_settings_table">
           <div class="left">
             <span>Fader:<input type="number" min="0" id="fader_input_num" value="0"></span>
@@ -162,6 +163,7 @@
           <div class="right">
             <button id="fader-learn-button">Learn</button>
             <button id="fader-update-button" disabled>Update</button>
+            <button id="fader-remove-button" disabled>Remove</button>
           </div>
         </div>
       </div>

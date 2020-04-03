@@ -1,12 +1,18 @@
+// GLOBALS
+var USED_FADER_IDS = []
+
+
+// FUNCTIONS
 function addDevice(id, name) {
   $(".devices").append('<li class="device"><span>' + id.toString() + '</span><span>' + name.toString() + '</span><input type="checkbox" name="" id="' + id.toString() + '"></li>');
 }
 
 function addInterfaceInstance(id, Hname, FriendlyName) {
-  $("#interface-space").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_front"><input type="checkbox" value="1" name="" id=""></div><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
+  $("#interface-space").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
 }
 
 function addFaderInstance(fader_channel, midi_chan) {
+  USED_FADER_IDS.push(parseInt(fader_channel));
   $(".faders_holder").append('<div class="fader"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader'+fader_channel+'"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
 }
 
@@ -119,9 +125,14 @@ $(
   }),
 
   $("#execs-add-fader").click(function () {
+    $("#fader-exists-error").addClass("disabled")
+    $("#fader_input_num").val(USED_FADER_IDS[USED_FADER_IDS.length -1]+1);
     $("#fader_span_title").html(": New");
     $("#fader_label_status").html("unmapped");
     $("#fader_label_midi_chn").html("/");
+    $("#fader-update-button").html("Add new");
+    $("#fader-update-button").attr('disabled', 'disabled');
+    $("#fader-remove-button").addClass("disabled");
     $("#execs-modal").removeClass("disabled");
   }),
 
@@ -139,9 +150,12 @@ $(
     let fader_channel = $("#fader_input_num").val(); // fader number on Magicq
     let midi_chan = $("#fader_label_midi_chn").html(); // MIDI channel that is mapped to the fader
 
-    /* if (midi_chan != 0) {
-      addFaderInstance(fader_channel, midi_chan);
-    } */
+    if(USED_FADER_IDS.includes(parseInt(fader_channel))){
+      // detected problem while trying to add an existing fader
+      // display err
+      $("#fader-exists-error").removeClass("disabled")
+      return;
+    }
 
     data = {
       event: "bindMIDIchannel",

@@ -136,6 +136,15 @@ func doEvery(d time.Duration, f func()) {
 	}
 }
 
+func containsValue(m map[helpers.InternalDevice]helpers.InternalOutput, v helpers.InternalOutput) bool {
+	for _, x := range m {
+		if x == v {
+			return true
+		}
+	}
+	return false
+}
+
 func addUIdevice(deviceType int16, hName string, fName string, devID int, socket *websocket.Conn) {
 	data := helpers.WSMsgTemplate{
 		Event: "UiAddDevice",
@@ -219,17 +228,25 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		// future me will be thankful: https://blog.golang.org/maps
 		// create an internal mapping
 
-		temp := helpers.InternalDevice{
+		tempKey := helpers.InternalDevice{
 			InterfaceType: 0,
 			DeviceID:      int(raw["device"].(float64)),
 			ChannelID:     byte(raw["chn"].(float64)),
 		}
 
-		// add an entry to the mappings array
-		mappings[temp] = helpers.InternalOutput{
-			OutType: raw["extType"].(float64), // that's a fader
+		tempVal := helpers.InternalOutput{
+			OutType: raw["extType"].(float64), // 0 is a fader
 			OutChan: int(raw["extChn"].(float64)),
 		}
+
+		if containsValue(mappings, tempVal) {
+			// the mapping already existed
+			cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
+			return
+		}
+
+		// add an entry to the mappings array
+		mappings[tempKey] = tempVal
 
 		// respond with permission to create UI fader
 		data := helpers.MappingResponse{
@@ -489,14 +506,6 @@ func StopListenMidi(id int) {
 		ins[id].Close()
 	}
 	cliLog("MIDI", fmt.Sprintf("MIDI device %v successfully closed", id), 0)
-}
-
-func handleMIDIevent(data []byte, deltaMicroseconds int64) {
-	//fmt.Println(data)
-	//osclib.SendOSC(int(data[1]), int(data[2]))
-	msg := "Chan: " + strconv.Itoa(int(data[1])) + " Value: " + strconv.Itoa((int(data[2])))
-	//handlers.W.Eval("cliLog (0, MIDI in, " + msg + ");")
-	fmt.Println(msg)
 }
 
 // function loops through devices and initializes their drivers and updates the UI
