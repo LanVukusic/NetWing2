@@ -1,5 +1,5 @@
 // GLOBALS
-var USED_FADER_IDS = []
+var USED_FADER_IDS = [-1]
 
 
 // FUNCTIONS
@@ -13,7 +13,7 @@ function addInterfaceInstance(id, Hname, FriendlyName) {
 
 function addFaderInstance(fader_channel, midi_chan) {
   USED_FADER_IDS.push(parseInt(fader_channel));
-  $(".faders_holder").append('<div class="fader"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader'+fader_channel+'"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
+  $(".faders_holder").append('<div class="fader" style="order:'+fader_channel+'"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader'+fader_channel+'"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
 }
 
 function clearDevices() {

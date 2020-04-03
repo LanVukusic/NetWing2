@@ -153,6 +153,23 @@ func addUIdevice(deviceType int16, hName string, fName string, devID int, socket
 	socket.WriteJSON(data)
 }
 
+func addUIFader(device interface{}, chn interface{}, MQChanel interface{}, socket *websocket.Conn, bcast bool) {
+	// respond with permission to create UI fader
+	data := helpers.MappingResponse{
+		Event:     "MappingsResponse",
+		DeviceID:  device.(int),
+		ChannelID: chn.(byte),
+		FaderID:   MQChanel.(int),
+	}
+
+	if bcast {
+		broadcastMessage(data)
+		return
+	}
+	socket.WriteJSON(data)
+	return
+}
+
 func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	var raw map[string]interface{}
 	err := json.Unmarshal(p, &raw)
@@ -248,15 +265,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		// add an entry to the mappings array
 		mappings[tempKey] = tempVal
 
-		// respond with permission to create UI fader
-		data := helpers.MappingResponse{
-			Event:     "MappingsResponse",
-			DeviceID:  int(raw["device"].(float64)),
-			ChannelID: byte(raw["chn"].(float64)),
-			FaderID:   int(raw["extChn"].(float64)),
-		}
-
-		socket.WriteJSON(data)
+		addUIFader(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), socket, false)
 		break
 	}
 
@@ -287,7 +296,7 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 			messageType, p, err := wsConnection.ReadMessage()
 			if err != nil {
 				if strings.Contains(err.Error(), "close 1001 (going away)") {
-					cliLog("NET", "Disconnect! Bye bye "+wsConnection.LocalAddr().String(), 1)
+					cliLog("WebServer", "Disconnect! Bye bye "+wsConnection.LocalAddr().String(), 1)
 					for i := 0; i < len(wsConnections); i++ {
 						if wsConnections[i] == wsConnection {
 							// we have found the faulty connection, so we remove it to prevent faulty broadcasting
@@ -406,7 +415,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 			broadcastMessage(temp)
 		} else {
 			// input has no active binding
-			fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+			//fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
 			cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 		}
 
@@ -517,48 +526,6 @@ func StopListenMidi(id int) {
 	cliLog("MIDI", fmt.Sprintf("MIDI device %v successfully closed", id), 0)
 }
 
-// function loops through devices and initializes their drivers and updates the UI
-// TO DO NOT WORKING YET
-func initializeSavedDevices(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
-	active := true
-	for _, device := range devlist {
-		//check for type and create the driver
-		if device.DeviceType == 0 { // it's a MIDI device
-
-			//if MIDI has no active driver create one
-			if drvMIDI == nil {
-				var err error
-				drvMIDI, err = driver.New()
-				if err != nil {
-					handleErr(err, "cant create MIDI driver ... activating", true)
-					return err
-				}
-			}
-
-			//The driver is active, so assign a listener to the MIDI device.
-			listenErr := ListenMidi(&drvMIDI, device.HardwareID, device.HardwareID, true)
-
-			if listenErr != nil {
-				handleErr(listenErr, "unable to listen to device", true)
-				active = false
-			}
-
-		} else {
-			handleErr(nil, "unrecognized device type", true)
-		}
-
-		//update ui
-		addUIdevice(device.DeviceType, device.HardwareName, device.FriendlyName, device.BindID, socket)
-
-		//check if device exists
-		// TO DO , disabled and enabled interfaces
-		fmt.Println(active)
-
-	}
-	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
-	return nil
-}
-
 func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
 	//active := true
 	for _, device := range devlist {
@@ -569,8 +536,13 @@ func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (er
 		}
 
 		//check if device exists
-		// TO DO , disabled and enabled interfaces
 	}
+
+	for k, v := range mappings {
+		//fmt.Printf("key[%s] value[%s]\n", k, v)
+		addUIFader(k.DeviceID, k.ChannelID, v.OutChan, socket, false)
+	}
+
 	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil
 }
