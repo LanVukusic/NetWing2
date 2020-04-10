@@ -46,7 +46,8 @@ button:hover {
   border: 2px solid rgba(255, 255, 255, 0.562);
 }
 
-button:disabled, button[disabled]{
+button:disabled,
+button[disabled] {
   color: rgba(255, 255, 255, 0.397);
   border: 2px solid rgba(255, 255, 255, 0.356);
 }
@@ -248,9 +249,13 @@ button:disabled, button[disabled]{
   padding: 0px 15px;
 }
 
+.main_execs {
+  display: flex;
+  overflow: hidden;
+}
 
 /* EXECS PAGE */
-.main_execs {
+.main_faders {
   display: flex;
   overflow: hidden;
 }
@@ -301,11 +306,11 @@ button:disabled, button[disabled]{
   margin: 5px 0;
 }
 
-.fader>div{
+.fader>div {
   margin: 20px 0px;
 }
 
-.slider{
+.slider {
   margin: 0;
   padding: 0;
   height: 55%;
@@ -317,18 +322,19 @@ button:disabled, button[disabled]{
   margin-top: 10px;
 }
 
-input[type=number]{
+input[type=number] {
   width: 20%;
   padding: 5px 10px;
   margin: 15px 0;
 }
 
-.fader>div{
+.fader>div {
   padding: 0px 0px;
   width: 100%;
   margin: 4px 4px;
 }
-.fader>div>span{
+
+.fader>div>span {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
@@ -507,7 +513,7 @@ input[type=number]{
   flex-direction: row;
 }
 
-.fader-exists-error{
+.fader-exists-error {
   padding: 3px 10px;
   border-left: solid 10px #f56161;
 }
@@ -549,23 +555,26 @@ input[type=number]{
   flex-wrap: wrap;
   width: 90%;
   justify-content: space-between;
-  
-}
-.execs_settings_table>div{
-  text-align: left;
-  padding: 10px 20px;
-  flex:1;
-  margin: 10px 15px;
-}
-.execs_settings_table>div:first-child {
-  flex:1;
-  flex-basis: 200px;
-}
-.execs_settings_table>div:last-child {
-  flex:2;
+
 }
 
-.execs_settings_table>div>button{
+.execs_settings_table>div {
+  text-align: left;
+  padding: 10px 20px;
+  flex: 1;
+  margin: 10px 15px;
+}
+
+.execs_settings_table>div:first-child {
+  flex: 1;
+  flex-basis: 200px;
+}
+
+.execs_settings_table>div:last-child {
+  flex: 2;
+}
+
+.execs_settings_table>div>button {
   margin: 10px 10px;
 }
 
@@ -597,21 +606,151 @@ html {
   scrollbar-color: #403e3e #f5d061;
 }
 
-.disabled {
-  display: none;
-}
-
 input[type=range][orient=vertical] {
   -webkit-appearance: slider-vertical;
   -moz-transfrom: rotate(270deg);
   writing-mode: bt-lr
 }
+
 input[type=range]::-moz-range-thumb {
   opacity: 0;
 }
+
 input[type=range]::-moz-range-track {
   opacity: 0;
 }
+
 input[type=range]::-moz-range-progress {
-  background-color: #f5d061; 
+  background-color: #f5d061;
+}
+
+
+/* EXECS */
+.main_execs {
+  display: flex;
+  flex-direction: column;
+}
+
+.execs_up {
+  border: solid 1px #e6c04f79;
+  border: solid 0px #e6af2e;
+  margin: 5px 5px;
+  flex: 12;
+}
+
+.execs_down {
+  flex: 2;
+  margin: 5px 5px;
+  border: solid 2px #e6c04f;
+  display: flex;
+  overflow: hidden;
+}
+
+.execs_plus {
+  color: #ffffffb4;
+  display: flex;
+  align-items: center;
+  font-size: 2em;
+  padding: 0 3%;
+  border-right: solid 2px #e6af2e;
+  cursor: pointer;
+  -webkit-box-shadow: 14px 0px 17px 0px rgba(50, 50, 50, 1);
+  -moz-box-shadow: 14px 0px 17px 0px rgba(50, 50, 50, 1);
+  box-shadow: 14px 0px 17px 0px rgba(50, 50, 50, 1);
+  z-index: 2;
+}
+.execs_plus:hover{
+  color: #ffffff;
+  background-color: #4d55703d;
+}
+
+.execs_scrollbar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+.execs_scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.page_holder {
+  color: rgba(255, 255, 255, 0.733);
+  padding: 1% 2%;
+  margin: 0 0.5%;
+  border: solid 2px #e6c04f00;
+  cursor: pointer;
+  transition: ease-in-out(5);
+  background-color: #ffffff2d;
+}
+
+.page_holder:hover{
+  background-color: #4d5570;
+  border: solid 2px #e6c04f57;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.execs_up{
+  display:flex;
+  flex-direction: column;
+  border: solid 2px #e6c04f;
+
+}
+.execs_up_row{
+  flex:1;
+  display:flex;
+  flex-direction: row;
+}
+
+.execs_up_item{
+  flex:1;
+  padding: 5px;
+  color: white;
+  /* background-color: #e6c04f; */
+  margin: 4px;
+  font-size: 1.3em;
+  border-radius: 3px;
+  cursor: pointer;
+  background-color: #ffffff0e;
+  /* background: linear-gradient(0deg, #ffffff57 30%, #ffffff1e 30%); */
+  -webkit-transition: background-color 0.5s;  
+  -moz-transition: opacity 0.5s;  
+  -o-transition: opacity 0.5s;  
+  transition: background-color 0.5s;  
+}
+
+.execs_up_item:hover{
+  background-color: #ffffff83;
+}
+
+
+.modal_execs{
+
+}
+
+.modal_execs_window{
+  width: 80%;
+  height: 80%;
+  display: flex;
+  flex-direction: row;
+  padding: 10px;
+}
+
+.execs_settings_border{
+  margin-top: 15px;
+  border-left: solid 2px #e6af2e;
+  padding-left: 10px;
+}
+
+.pointer{
+  cursor: pointer;
+}
+
+.disabled {
+  display: none;
 }

@@ -15,6 +15,7 @@
   <div class="up">
     <div class="side">
       <div class="side_block block_active">Interfaces</div>
+      <div class="side_block">Faders</div>
       <div class="side_block">Execs</div>
       <!-- <div class="side_block">Views</div>
       <div class="side_block">Users</div> -->
@@ -52,7 +53,7 @@
         </div>
       </div>
 
-      <div class="main_window main_execs disabled">
+      <div class="main_window main_faders disabled">
         <div class="interfaces_workplace doted execs_workplace">
 
           <div class="settings_nav">
@@ -60,23 +61,74 @@
             <span id="execs-add-fader">[A]dd</span>
           </div>
           <div class="faders_holder">
+            <!-- there be faders -->
+          </div>
+        </div>
+      </div>
 
-            <!-- The place where exec instances are added -->
-            <!-- <div class="fader">
-              <button id="fader-edit-button">edit</button>
-              <input disabled="" type="range" orient="vertical" max="100" min="0" class="slider">
-              <div>
-                <span><span>MIDI:</span><i id="fader-label-midi">0.07</i></span>
-                <span>Exec:<i id="fader-label-exec">3</i></span>
-              </div>
-            </div> -->
+      <div class="main_window main_interfaces main_execs">
+
+        <div class="execs_up" id="exec_page_1">
+          <div class="execs_up_row">
+            <div class="execs_up_item" id="exec_item1" itemid="1" isset="0">1 <br>
+              <label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item2" itemid="2" isset="1">2 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item3" itemid="3" isset="0">3 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item4" itemid="4" isset="1">4 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item5" itemid="5" isset="0">5 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item6" itemid="6" isset="1">6 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+          </div>
+          
+          <div class="execs_up_row">
+            <div class="execs_up_item" id="exec_item" itemid="7" isset="0">7 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="8" isset="1">8 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="9" isset="0">9 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="10" isset="1">10 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="11" isset="0">11 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="12" isset="1">12 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+          </div>
+
+          <div class="execs_up_row">
+            <div class="execs_up_item" id="exec_item" itemid="13" isset="0">13 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="14" isset="1">14 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="15" isset="0">15 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="16" isset="1">16 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="17" isset="0">17 <br><label id="exec_mapping"></label><br></div>
+            <div class="execs_up_item" id="exec_item" itemid="18" isset="1">18 <br><label id="exec_mapping">MIDI - 0 - 14 </label><br></div>
+          </div>
+        </div>
+          
+        <div class="execs_down">
+          <div class="execs_plus">+</div>
+          <div class="execs_scrollbar">
+
+
+            <div class="page_holder">1</div>
+            <div class="page_holder">2</div>
+            <div class="page_holder">3</div>
+            <div class="page_holder">4</div>
+            <div class="page_holder">5</div>
+            <div class="page_holder">6</div>
+            <div class="page_holder">7</div>
+            <div class="page_holder">8</div>
+            <div class="page_holder">9</div>
+            <div class="page_holder">10</div>
+            <div class="page_holder">1</div>
+            <div class="page_holder">2</div>
+            <div class="page_holder">3</div>
+            <div class="page_holder">4</div>
+            <div class="page_holder">5</div>
+            <div class="page_holder">6</div>
+            <div class="page_holder">7</div>
+            <div class="page_holder">8</div>
+            <div class="page_holder">9</div>
+            <div class="page_holder">10</div>
 
           </div>
         </div>
       </div>
 
     </div>
-  </div>
 
   </div>
 
@@ -140,8 +192,7 @@
     </div>
   </div>
 
-
-  <div class="modal modal_faders disabled" id="execs-modal">
+  <div class="modal disabled modal_faders " id="faders-modal">
     <div class="window window_execs">
       <div class="modalNav">
         <div>Fader
@@ -170,14 +221,54 @@
     </div>
   </div>
 
+  <div class="modal disabled modal_execs " id="execs-modal">
+    <div class="window window_execs">
+      <div class="modalNav">
+        <div>Exec:
+          <span id="exec_span_title">10</span>
+        </div>
+        <div id="closeModalExecs" class="navBtn">[Esc]</div>
+      </div>
+      <div class="modalBody">
+        <span>Exec settings</span>
+        <i id="exec-exists-error"></i>
+        <div class="execs_settings_table">
+          <div class="left">
+            <div class="execs_settings_border">
+              <input class="pointer" type="radio" id="fader_radio" name="type" value="fader" checked="checked">
+              <label class="pointer" for="male">Fader</label><br>
+              <input class="pointer" type="radio"  name="type" value="button">
+              <label class="pointer" for="female">Button</label><br> 
+            </div>
+            <div class="execs_settings_border">
+              <input class="pointer" type="checkbox" id="midiOut" name="Respond" value="Respond">
+              <label class="pointer" for="male">enable MIDI out WIP</label>
+            </div>
+            <br>
+            <span>In:<label id="exec_label_midi_chn"></label></span>
+            <br>
+            <span>status: <i><label id="exec_label_status"></label></i></span>
+          </div>
+          <div class="right">
+            <button id="exec-learn-button">Learn</button>
+            <button id="exec-update-button" disabled>Update</button>
+            <button id="exec-remove-button" disabled>Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 <script src="/assets/static/jquerry.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/web-socket-js/1.0.0/web_socket.js"></script>
 <script src="/assets/js/index.js"></script>
 <script src="/assets/js/rpc.js"></script>
 
-<script src="../static/jquerry.js"></script>
+<!-- <script src="../static/jquerry.js"></script>
 <script src="../js/index.js"></script>
-<script src="../js/rpc.js"></script>
+<script src="../js/rpc.js"></script> -->
 
 </html>
+
+

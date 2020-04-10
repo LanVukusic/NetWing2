@@ -17,13 +17,15 @@ import (
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
 	"github.com/gorilla/websocket"
-
+	"github.com/hypebeast/go-osc/osc"
 	"github.com/zserge/webview"
 )
 
 // globals
-var MIDIListenMode bool // true:active interface, false:binding interface
+var MIDIListenMode bool  // true:active interface, false:binding interface
+var listenDeviceType int // type of listening
 var mappings map[helpers.InternalDevice]helpers.InternalOutput
+var OSClient osc.Client
 
 // packeging
 var boxView packr.Box
@@ -71,9 +73,8 @@ func main() {
 	// start loopcheck to alert for disconnected devices
 	go doEvery(2000*time.Millisecond, loopCheck)
 
-	/* //start OSC
-	fmt.Println("Starting OSC")
-	osclib.StartOSCServer() */
+	//start OSC
+	OSClient = *osc.NewClient("localhost", 8000)
 
 	// create a http server to serve the UI both remote and to the local client
 	fmt.Println("Starting webserver")
@@ -157,9 +158,29 @@ func addUIFader(device interface{}, chn interface{}, MQChanel interface{}, socke
 	// respond with permission to create UI fader
 	data := helpers.MappingResponse{
 		Event:     "MappingsResponse",
+		Interface: 0, // 0= fader, 3 = exec
 		DeviceID:  device.(int),
 		ChannelID: chn.(byte),
 		FaderID:   MQChanel.(int),
+	}
+
+	if bcast {
+		broadcastMessage(data)
+		return
+	}
+	socket.WriteJSON(data)
+	return
+}
+
+func addUIExec(device interface{}, chn interface{}, execID interface{}, pageID interface{}, socket *websocket.Conn, bcast bool) {
+	// respond with permission to create UI fader
+	data := helpers.MappingResponse{
+		Event:     "MappingsResponse",
+		Interface: 3, // exec
+		DeviceID:  device.(int),
+		ChannelID: chn.(byte),
+		ExecID:    execID.(int),
+		ExecPage:  pageID.(int),
 	}
 
 	if bcast {
@@ -191,6 +212,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	case "changeMIDImode": // changes midi mode to BIND
 		fmt.Println("msg received BINDING active")
 		MIDIListenMode = false
+		listenDeviceType = int(raw["interface"].(float64))
 		break
 
 	case "addInterface":
@@ -244,29 +266,61 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	case "bindMIDIchannel":
 		// future me will be thankful: https://blog.golang.org/maps
 		// create an internal mapping
+		if int(raw["extType"].(float64)) == 0 { // FADER
+			// fader
+			tempKey := helpers.InternalDevice{
+				InterfaceType: 0,
+				DeviceID:      int(raw["device"].(float64)),
+				ChannelID:     byte(raw["chn"].(float64)),
+			}
 
-		tempKey := helpers.InternalDevice{
-			InterfaceType: 0,
-			DeviceID:      int(raw["device"].(float64)),
-			ChannelID:     byte(raw["chn"].(float64)),
+			tempVal := helpers.InternalOutput{
+				OutType: 0, // 0 is a fader
+				OutChan: int(raw["extChn"].(float64)),
+				OutPage: 0,
+				Fade:    true,
+			}
+
+			if containsValue(mappings, tempVal) {
+				// the mapping already existed
+				cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
+				return
+			}
+
+			// add an entry to the mappings array
+			mappings[tempKey] = tempVal
+
+			addUIFader(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), socket, true)
+			break
+
+		} else {
+			if int(raw["extType"].(float64)) == 3 { // EXEC
+				tempKey := helpers.InternalDevice{
+					InterfaceType: 0, // MIDI
+					DeviceID:      int(raw["device"].(float64)),
+					ChannelID:     byte(raw["chn"].(float64)),
+				}
+
+				tempVal := helpers.InternalOutput{
+					OutType: 3, // 3 is a EXEC
+					OutChan: int(raw["extChn"].(float64)),
+					OutPage: int(raw["execPage"].(float64)),
+					Fade:    raw["typeFader"].(bool),
+				}
+
+				if containsValue(mappings, tempVal) {
+					// the mapping already existed
+					cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
+					return
+				}
+
+				// add an entry to the mappings array
+				mappings[tempKey] = tempVal
+
+				addUIExec(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), socket, true)
+				break
+			}
 		}
-
-		tempVal := helpers.InternalOutput{
-			OutType: raw["extType"].(float64), // 0 is a fader
-			OutChan: int(raw["extChn"].(float64)),
-		}
-
-		if containsValue(mappings, tempVal) {
-			// the mapping already existed
-			cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
-			return
-		}
-
-		// add an entry to the mappings array
-		mappings[tempKey] = tempVal
-
-		addUIFader(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), socket, false)
-		break
 	}
 
 }
@@ -396,10 +450,11 @@ func json2text(in interface{}) (out string, err error) {
 }
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
+
 	if MIDIListenMode {
 		// input has an active binding
 		tempIn := helpers.InternalDevice{
-			InterfaceType: 0, // MIDI = 0
+			InterfaceType: 0, // MIDI = 0,
 			DeviceID:      deviceID,
 			ChannelID:     in[1],
 		}
@@ -407,28 +462,49 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 
 		if exists {
 			//fmt.Println("BOUND", tempOut, in[2])
-			temp := helpers.FaderUpdate{
-				Event:   "UpdateFader",
-				FaderID: tempOut.OutChan,
-				Value:   in[2],
+			switch tempOut.OutType {
+			case 0:
+				temp := helpers.FaderUpdate{
+					Event:   "UpdateFader",
+					Type:    0,
+					FaderID: tempOut.OutChan,
+					Value:   in[2],
+				}
+				broadcastMessage(temp)
+				break
+			case 3:
+				temp := helpers.ExecUpdate{
+					Event:    "UpdateFader",
+					Type:     3,
+					FaderID:  tempOut.OutChan,
+					PageID:   tempOut.OutPage,
+					FadeType: tempOut.Fade,
+					Value:    in[2],
+				}
+				broadcastMessage(temp)
+				break
 			}
-			broadcastMessage(temp)
 		} else {
 			// input has no active binding
-			//fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
 			cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 		}
+
+		/* msg := osc.NewMessage("/pb/" + fmt.Sprintf("%d", tempOut.OutChan))
+		msg.Append(fmt.Sprintf("%d", int((int(in[2]) * 100 / 127))))
+		OSClient.Send(msg) */
 
 	} else {
 		// binding interface mode
 		temp := helpers.MIDILearnMessage{
 			Event:     "learnMidiRet",
+			Interf:    listenDeviceType,
 			DeviceID:  deviceID,
 			ChannelID: in[1],
 		}
 		broadcastMessage(temp)
 		MIDIListenMode = true // exit midi mapping mode
 	}
+
 }
 
 func cliLog(cause string, body string, threatLevel int) {

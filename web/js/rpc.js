@@ -26,16 +26,38 @@ if (window["WebSocket"]) {
         break
       case "learnMidiRet":
         //evt = JSON.parse(evt.Data.replace(/'/g,"\""));
-        setMIDILearnFader(evt.DeviceID, evt.ChannelID);
+        console.log(evt.Interf);
+        switch(evt.Interf){
+          case 0:
+            setMIDILearnFader(evt.DeviceID, evt.ChannelID);
+            break
+          case 3:
+            setMIDILearnExec(evt.DeviceID, evt.ChannelID);
+            break
+        }
+        
         break
       case "MappingsResponse":
-        addFaderInstance(evt.FaderID, `${evt.DeviceID}.${evt.ChannelID}`)
+        if(evt.Interface == 0){
+          addFaderInstance(evt.FaderID, `${evt.DeviceID}.${evt.ChannelID}`);
+        }else{
+          if( evt.Interface == 3){
+            updateExecInstance(evt.ExecID, evt.ExecPage, `${evt.DeviceID}.${evt.ChannelID}`);
+          }
+        }
+        //
         break
       case "UpdateFader":
-        $("#fader"+evt.FaderID).val(parseInt(evt.Value));
+        if(evt.Type == 0){
+          $("#fader"+evt.FaderID).val(parseInt(evt.Value));
+        }else if (evt.Type == 3){
+          let val = evt.Value * 100 / 127
+          $("#exec_page_"+evt.PageID).find("#exec_item"+evt.FaderID).css("background", "linear-gradient(0deg, #ffffff57 "+val+"%, #ffffff1e "+val+"%)")
+          $("#fader"+evt.FaderID).val(parseInt(evt.Value));
+        }
+        
     }
   }
 } else {
   alert("Your browser does not support websocket connection. Interface is not operational.")
 }
-

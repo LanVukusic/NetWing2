@@ -72,6 +72,7 @@ type Bind2MIDI struct {
 //MIDILearnMessage serves as an interface to comunicate to frontend what midi channel was to be used in bind to a fader / execWindow item
 type MIDILearnMessage struct {
 	Event     string `json:"Event"`
+	Interf    int    `json:"Interf"`
 	DeviceID  int    `json:"DeviceID"`
 	ChannelID byte   `json:"ChannelID"`
 }
@@ -87,21 +88,36 @@ type InternalDevice struct {
 type InternalOutput struct {
 	OutType float64
 	OutChan int
+	OutPage int
+	Fade    bool
 }
 
 //MappingResponse is sent back to the client, to confirm that the interface is bound
 type MappingResponse struct {
 	Event     string `json:"Event"`
+	Interface int    `json:"Interface"`
 	DeviceID  int    `json:"DeviceID"`
 	ChannelID byte   `json:"ChannelID"`
 	FaderID   int    `json:"FaderID"`
+	ExecID    int    `json:"ExecID"`
+	ExecPage  int    `json:"ExecPage"`
 }
 
 //FaderUpdate is sent to client to update fader value with current MIDI value
 type FaderUpdate struct {
 	Event   string `json:"Event"`
+	Type    int    `json:"Type"`
 	FaderID int    `json:"FaderID"`
 	Value   byte   `json:"Value"`
+}
+
+type ExecUpdate struct {
+	Event    string `json:"Event"`
+	Type     int    `json:"Type"`
+	FaderID  int    `json:"FaderID"`
+	PageID   int    `json:"PageID"`
+	FadeType bool   `json:"FadeType"`
+	Value    byte   `json:"Value"`
 }
 
 //GetOSCMessage returns an OSC message ready to get sent.
