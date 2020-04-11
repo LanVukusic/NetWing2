@@ -453,6 +453,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 
 	MIDItype := int(in[0])
 	if MIDItype == 192 {
+		cliLog("MIDI", "Cant map to 'CONTROLL CHANGE' messages", 2)
 		return
 	}
 	MIDIchannel := in[1]
@@ -650,9 +651,18 @@ func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (er
 
 	for k, v := range mappings {
 		//fmt.Printf("key[%s] value[%s]\n", k, v)
-		addUIFader(k.DeviceID, k.ChannelID, v.OutChan, socket, false)
+		switch v.OutType {
+		case 0:
+			addUIFader(k.DeviceID, k.ChannelID, v.OutChan, socket, false)
+			break
+		case 3:
+			addUIExec(k.DeviceID, k.ChannelID, v.OutChan, v.OutPage, socket, false)
+			break
+		}
+
 	}
 
 	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil
+
 }

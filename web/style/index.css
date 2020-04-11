@@ -631,13 +631,6 @@ input[type=range]::-moz-range-progress {
   flex-direction: column;
 }
 
-.execs_up {
-  border: solid 1px #e6c04f79;
-  border: solid 0px #e6af2e;
-  margin: 5px 5px;
-  flex: 12;
-}
-
 .execs_down {
   flex: 2;
   margin: 5px 5px;
@@ -696,11 +689,12 @@ input[type=range]::-moz-range-progress {
 }
 
 .execs_up{
+  margin: 5px 5px;
+  flex: 12;
   display:flex;
   flex-direction: column;
-  border: solid 2px #e6c04f;
-
 }
+
 .execs_up_row{
   flex:1;
   display:flex;

@@ -282,7 +282,7 @@ $(
   }),
 
   $("#exec-update-button").click(function () {
-    let page  = 1;
+    let page  = 1; // TOO DOOOOO
     let form = $(this).parent().parent().find(".left");
     let isFader = form.find("input[name='exec_type']:checked").val();
     let midiOut = form.find("#midiOut").val();
@@ -303,6 +303,7 @@ $(
     
     // close the window
     $("#faders-modal").addClass("disabled");
+    $("#exec_page_"+page).find("#exec_item"+execId).attr("isset","1")
 
     
   })
