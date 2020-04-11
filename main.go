@@ -451,12 +451,19 @@ func json2text(in interface{}) (out string, err error) {
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
 
+	MIDItype := int(in[0])
+	if MIDItype == 192 {
+		return
+	}
+	MIDIchannel := in[1]
+	MIDIvalue := in[2]
+
 	if MIDIListenMode {
 		// input has an active binding
 		tempIn := helpers.InternalDevice{
 			InterfaceType: 0, // MIDI = 0,
 			DeviceID:      deviceID,
-			ChannelID:     in[1],
+			ChannelID:     MIDIchannel,
 		}
 		tempOut, exists := mappings[tempIn]
 
@@ -468,38 +475,65 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 					Event:   "UpdateFader",
 					Type:    0,
 					FaderID: tempOut.OutChan,
-					Value:   in[2],
+					Value:   MIDIvalue,
 				}
 				broadcastMessage(temp)
+				msg := osc.NewMessage("/pb/" + fmt.Sprintf("%d", tempOut.OutChan))
+				msg.Append(fmt.Sprintf("%d", int((int(MIDIvalue) * 100 / 127))))
+				OSClient.Send(msg)
 				break
 			case 3:
+				// check if it's a button
+				var out int
+
+				if !tempOut.Fade {
+					//check control type
+					switch MIDItype {
+					case 144:
+						// note on - we turn button on
+						out = 127
+						break
+					case 128:
+						// note off -we turn button off
+						out = 0
+						break
+					case 176:
+						// if value is grater than 0, button is on
+						if MIDIvalue != 0 {
+							out = 127
+							break
+						}
+					}
+				} else {
+					out = int(MIDIvalue)
+				}
+
 				temp := helpers.ExecUpdate{
 					Event:    "UpdateFader",
 					Type:     3,
 					FaderID:  tempOut.OutChan,
 					PageID:   tempOut.OutPage,
 					FadeType: tempOut.Fade,
-					Value:    in[2],
+					Value:    out,
 				}
+
 				broadcastMessage(temp)
+				msg := osc.NewMessage("/exec/" + fmt.Sprintf("%d", tempOut.OutPage) + "/" + fmt.Sprintf("%d", tempOut.OutChan))
+				msg.Append(fmt.Sprintf("%d", int((out * 100 / 127))))
+				OSClient.Send(msg)
 				break
 			}
 		} else {
 			// input has no active binding
-			cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
+			cliLog("MIDI", fmt.Sprintf("Type: %v, Chn: %v, Val: %v, Device: %v", MIDItype, MIDIchannel, MIDIvalue, int(deviceID)), 0)
 		}
-
-		/* msg := osc.NewMessage("/pb/" + fmt.Sprintf("%d", tempOut.OutChan))
-		msg.Append(fmt.Sprintf("%d", int((int(in[2]) * 100 / 127))))
-		OSClient.Send(msg) */
-
 	} else {
 		// binding interface mode
 		temp := helpers.MIDILearnMessage{
 			Event:     "learnMidiRet",
 			Interf:    listenDeviceType,
 			DeviceID:  deviceID,
-			ChannelID: in[1],
+			ChannelID: MIDIchannel,
 		}
 		broadcastMessage(temp)
 		MIDIListenMode = true // exit midi mapping mode

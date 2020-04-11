@@ -48,10 +48,10 @@ if (window["WebSocket"]) {
         //
         break
       case "UpdateFader":
-        if(evt.Type == 0){
+        if(evt.Type == 0){  // update fader
           $("#fader"+evt.FaderID).val(parseInt(evt.Value));
-        }else if (evt.Type == 3){
-          let val = evt.Value * 100 / 127
+        }else if (evt.Type == 3){  // update exec
+          let val = Math.floor(evt.Value * 100 / 127)
           $("#exec_page_"+evt.PageID).find("#exec_item"+evt.FaderID).css("background", "linear-gradient(0deg, #ffffff57 "+val+"%, #ffffff1e "+val+"%)")
           $("#fader"+evt.FaderID).val(parseInt(evt.Value));
         }

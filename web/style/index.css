@@ -725,12 +725,10 @@ input[type=range]::-moz-range-progress {
 }
 
 .execs_up_item:hover{
-  background-color: #ffffff83;
+  background-color: #ffffff83 !important;
 }
 
-
 .modal_execs{
-
 }
 
 .modal_execs_window{

@@ -117,7 +117,7 @@ type ExecUpdate struct {
 	FaderID  int    `json:"FaderID"`
 	PageID   int    `json:"PageID"`
 	FadeType bool   `json:"FadeType"`
-	Value    byte   `json:"Value"`
+	Value    int    `json:"Value"`
 }
 
 //GetOSCMessage returns an OSC message ready to get sent.

@@ -284,11 +284,11 @@ $(
   $("#exec-update-button").click(function () {
     let page  = 1;
     let form = $(this).parent().parent().find(".left");
-    let isFader = form.find("#fader_radio").val();
+    let isFader = form.find("input[name='exec_type']:checked").val();
     let midiOut = form.find("#midiOut").val();
     let midi_chan = form.find("#exec_label_midi_chn").html();
     let execId = $("#exec_span_title").html();
-
+    
     data = {
       event: "bindMIDIchannel",
       device: Math.floor(parseInt(midi_chan)),
@@ -296,7 +296,7 @@ $(
       extChn: parseInt(execId),
       execPage: page,
       extType: 3, // 0 = fader, 4 = exec
-      typeFader: isFader == "fader" ? true : false,
+      typeFader: (isFader == "fader") ? true : false,
       //feedback: midiOut
     }
     conn.send(JSON.stringify(data))
