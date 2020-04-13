@@ -120,6 +120,14 @@ type ExecUpdate struct {
 	Value    int    `json:"Value"`
 }
 
+// ExecWindow is a struct to be put in array, so server can keep up with active exec pages for saving and later updates
+type ExecWindow struct {
+	Event  string `json:"Event"`
+	Page   int    `json:"Page"`
+	Width  int    `json:"Width"`
+	Height int    `json:"Height"`
+}
+
 //GetOSCMessage returns an OSC message ready to get sent.
 /* func (o OSCOOutput) GetOSCMessage() (msg string, err error) {
 

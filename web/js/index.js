@@ -1,5 +1,6 @@
 // GLOBALS
 var USED_FADER_IDS = [-1]
+var curr_fader_page
 
 
 // FUNCTIONS
@@ -80,6 +81,75 @@ function setMIDILearnExec(device, channel){
   $("#exec_label_midi_chn").html(""+device+"."+channel);
   $("#exec-update-button").prop('disabled', false);
   //console.log(device, channel)
+}
+
+function exec_tile_func (){
+  $("#exec_span_title").html($(this).attr('itemid'));
+  if($(this).attr('isset') == 0){
+    // is not set
+    $("#exec-exists-error").html("Adding new exec mapping");
+    $("#exec_label_status").html("unmapped");
+    $("#exec_label_midi_chn").html("/");
+    $("#exec-update-button").html("Create");
+    $("#exec-remove-button").addClass("disabled");
+  }else{
+    // is set already
+    $("#exec-exists-error").html("Update existing exec");
+    $("#exec_label_status").html("Mapped");
+    $("#exec_label_midi_chn").html(""+$(this).find("#exec_mapping").html());
+    $("#exec-update-button").html("Update");
+    $("#exec-update-button").prop('disabled', false);
+    $("#exec-remove-button").removeClass("disabled");
+    $("#exec-remove-button").prop('disabled', false);
+  }
+  
+  $("#exec-update-button").attr('disabled', 'disabled');
+  $("#execs-modal").removeClass("disabled");
+}
+
+function change_page (obj) {
+  // update main look
+  $('.exec_page').each(function (i, obj) {
+    $(obj).addClass("disabled")
+  });
+
+  $("#exec_page_" + $(this).text().toString().toLowerCase()).removeClass("disabled")
+
+  //update menu look
+  $('.page_holder').each(function (i, obj) {
+    $(obj).removeClass("page_holder_active")
+  });
+  $(this).addClass("page_holder_active")
+
+  curr_fader_page = parseInt($(obj).html())
+}
+
+function add_exec_page (page, width, heigh) {
+  let exec_page = $('<div>')
+  exec_page.addClass('execs_up');
+  exec_page.addClass('exec_page');
+  exec_page.attr({ id : 'exec_page_' + page });
+
+  let counter = 1;
+
+  for (let row = 0; row < parseInt(width); row++) {
+    let rowHTML = $('<div>')
+    rowHTML.addClass('execs_up_row');
+    for(let col = 0; col < parseInt(heigh); col ++){
+      let colHTML = $('<div class="execs_up_item" id="exec_item'+counter+'" itemid="'+counter+'" isset="0">'+counter+'<br><label id="exec_mapping"></label><br></div>')
+      $(colHTML).click(exec_tile_func);
+      rowHTML.append(colHTML)
+      counter ++;
+    }
+    exec_page.append(rowHTML);
+  }
+
+  $(".main_execs").append(exec_page);
+
+  let fton = $('<div class="page_holder">'+page+'</div>')
+  fton.click(change_page)
+
+  $(".execs_scrollbar").append(fton)
 }
 
 $(
@@ -240,38 +310,8 @@ $(
     conn.send(JSON.stringify(data));
   }),
   
-  
    /*  EXECS STUFF */
-   $( ".execs_up_item" ).each(function( i ) {
-    $( this ).click(function(){
-      $("#exec_span_title").html($(this).attr('itemid'));
-      if($(this).attr('isset') == 0){
-        // is not set
-        $("#exec-exists-error").html("Adding new exec mapping");
-        $("#exec_label_status").html("unmapped");
-        $("#exec_label_midi_chn").html("/");
-        $("#exec-update-button").html("Create");
-        $("#exec-remove-button").addClass("disabled");
-      }else{
-        // is set already
-        $("#exec-exists-error").html("Update existing exec");
-        $("#exec_label_status").html("Mapped");
-        $("#exec_label_midi_chn").html(""+$(this).find("#exec_mapping").html());
-        $("#exec-update-button").html("Update");
-        $("#exec-update-button").prop('disabled', false);
-        $("#exec-remove-button").removeClass("disabled");
-        $("#exec-remove-button").prop('disabled', false);
-      }
-      
-      $("#exec-update-button").attr('disabled', 'disabled');
-      $("#execs-modal").removeClass("disabled");
-    })
-
-    // $(this).css({ backgroundColor: '#f0f0f0' });
-
-
-  }),
-
+   
   $("#exec-learn-button").click(function () {
     // transmit the listening mode to the server
     data = {
@@ -282,7 +322,7 @@ $(
   }),
 
   $("#exec-update-button").click(function () {
-    let page  = 1; // TOO DOOOOO
+    let page  = parseInt(curr_fader_page);  // TOO DOOOOO
     let form = $(this).parent().parent().find(".left");
     let isFader = form.find("input[name='exec_type']:checked").val();
     let midiOut = form.find("#midiOut").val();
@@ -304,10 +344,28 @@ $(
     // close the window
     $("#faders-modal").addClass("disabled");
     $("#exec_page_"+page).find("#exec_item"+execId).attr("isset","1")
+  }),
 
-    
-  })
+  $(".execs_plus").click(function () {
+    $(".modal_window").removeClass("disabled");
+  }),
 
+  $("#closeModalWindow").click(function () {
+    $(".modal_window").addClass("disabled");
+  }),
+  
+  $("#button_add_window").click(function (e) {
+    let window = $("#exec_window_win").val();
+    let page = $("#exec_window_page").val();
 
+    data = {
+      event: "addNewPage",
+      page: parseInt(page),
+      width: parseInt(window.split("/")[0]),
+      height: parseInt(window.split("/")[1])
+    }
+
+    conn.send(JSON.stringify(data))
+  }),
 
 );

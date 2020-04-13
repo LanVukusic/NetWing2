@@ -67,64 +67,17 @@
       </div>
 
       <div class="main_window main_interfaces main_execs">
-
-        <div class="execs_up" id="exec_page_1">
-          <div class="execs_up_row">
-            <div class="execs_up_item" id="exec_item1" itemid="1" isset="0">1 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item2" itemid="2" isset="0">2 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item3" itemid="3" isset="0">3 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item4" itemid="4" isset="0">4 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item5" itemid="5" isset="0">5 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item6" itemid="6" isset="0">6 <br><label id="exec_mapping"></label><br></div>
-          </div>
-
-          <div class="execs_up_row">
-            <div class="execs_up_item" id="exec_item7" itemid="7" isset="0">1 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item8" itemid="8" isset="0">2 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item9" itemid="9" isset="0">3 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item10" itemid="10" isset="0">4 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item11" itemid="11" isset="0">5 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item12" itemid="12" isset="0">6 <br><label id="exec_mapping"></label><br></div>
-          </div>
-
-          <div class="execs_up_row">
-            <div class="execs_up_item" id="exec_item13" itemid="13" isset="0">1 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item14" itemid="14" isset="0">2 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item15" itemid="15" isset="0">3 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item16" itemid="16" isset="0">4 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item17" itemid="17" isset="0">5 <br><label id="exec_mapping"></label><br></div>
-            <div class="execs_up_item" id="exec_item18" itemid="18" isset="0">6 <br><label id="exec_mapping"></label><br></div>
-          </div>
-        </div>
-
+        
         <div class="execs_down">
           <div class="execs_plus">+</div>
           <div class="execs_scrollbar">
-
-
-            <div class="page_holder">1</div>
-            <div class="page_holder">2</div>
-            <div class="page_holder">3</div>
-            <div class="page_holder">4</div>
-            <div class="page_holder">5</div>
-            <div class="page_holder">6</div>
-            <div class="page_holder">7</div>
-            <div class="page_holder">8</div>
-            <div class="page_holder">9</div>
-            <div class="page_holder">10</div>
-            <div class="page_holder">1</div>
-            <div class="page_holder">2</div>
-            <div class="page_holder">3</div>
-            <div class="page_holder">4</div>
-            <div class="page_holder">5</div>
-            <div class="page_holder">6</div>
-            <div class="page_holder">7</div>
-            <div class="page_holder">8</div>
-            <div class="page_holder">9</div>
-            <div class="page_holder">10</div>
+            <!-- here are the page buttons -->
 
           </div>
         </div>
+
+         <!-- here are the exec pages -->
+
       </div>
 
     </div>
@@ -258,16 +211,24 @@
     </div>
   </div>
 
-  <div class="modal modal_window " id="window-modal">
+  <div class="modal disabled modal_window  " id="window-modal">
     <div class="window window_window">
       <div class="modalNav">
         <div>Add Window
-          <span id="window_span_title">10</span>
+          <span id="window_span_title">1</span>
         </div>
         <div id="closeModalWindow" class="navBtn">[Esc]</div>
       </div>
-      <div class="modalBody">
-       
+      <div class="modalBody body_window">
+       <div>
+        <i>Enter window in format {width}/{height}</i>
+        <br>
+        <div>
+          <input type="text" placeholder="8/4" id="exec_window_win">
+          <span> Page:<input type="number" placeholder="1" id="exec_window_page"></span>
+        </div>
+        <button id="button_add_window">add page</button>
+       </div>
       </div>
     </div>
   </div>

@@ -324,7 +324,7 @@ button[disabled] {
 
 input[type=number] {
   width: 20%;
-  padding: 5px 10px;
+  padding: 7px 10px;
   margin: 15px 0;
 }
 
@@ -678,6 +678,12 @@ input[type=range]::-moz-range-progress {
   transition: ease-in-out(5);
   background-color: #ffffff2d;
 }
+.page_holder_active {
+  border: solid 2px #e6c04f94;
+  color: rgba(255, 255, 255, 0.842);
+}
+
+
 
 .page_holder:hover{
   background-color: #4d5570;
@@ -704,7 +710,7 @@ input[type=range]::-moz-range-progress {
 .execs_up_item{
   flex:1;
   padding: 5px;
-  color: white;
+  color: rgba(255, 255, 255, 0.925);
   /* background-color: #e6c04f; */
   margin: 4px;
   font-size: 1.3em;
@@ -737,6 +743,22 @@ input[type=range]::-moz-range-progress {
   margin-top: 15px;
   border-left: solid 2px #e6af2e;
   padding-left: 10px;
+}
+
+
+/* WINDOW */
+ 
+.window_window{
+  width: 60%;
+  height: 40%;
+}
+
+
+.body_window{
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px;
 }
 
 .pointer{

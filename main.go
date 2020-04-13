@@ -22,10 +22,11 @@ import (
 )
 
 // globals
-var MIDIListenMode bool  // true:active interface, false:binding interface
-var listenDeviceType int // type of listening
-var mappings map[helpers.InternalDevice]helpers.InternalOutput
+var MIDIListenMode bool                                        // true:active interface, false:binding interface.
+var listenDeviceType int                                       // type of listening.
+var mappings map[helpers.InternalDevice]helpers.InternalOutput // array of mappings.
 var OSClient osc.Client
+var exec_pages []helpers.ExecWindow
 
 // packeging
 var boxView packr.Box
@@ -54,6 +55,8 @@ func main() {
 	drvMIDI = nil
 	MIDIListenMode = false
 	mappings = make(map[helpers.InternalDevice]helpers.InternalOutput)
+
+	exec_pages = []helpers.ExecWindow{}
 
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
@@ -321,6 +324,18 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 				break
 			}
 		}
+
+	case "addNewPage":
+
+		temp := helpers.ExecWindow{
+			Event:  "newExecPage",
+			Page:   int(raw["page"].(float64)),
+			Width:  int(raw["width"].(float64)),
+			Height: int(raw["height"].(float64)),
+		}
+		exec_pages = append(exec_pages, temp)
+
+		broadcastMessage(temp)
 	}
 
 }
@@ -647,6 +662,18 @@ func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (er
 		}
 
 		//check if device exists
+	}
+
+	// update pages
+	for _, s := range exec_pages {
+		fmt.Println(s)
+		temp := helpers.ExecWindow{
+			Event:  "newExecPage",
+			Page:   s.Page,
+			Width:  s.Width,
+			Height: s.Height,
+		}
+		socket.WriteJSON(temp)
 	}
 
 	for k, v := range mappings {
