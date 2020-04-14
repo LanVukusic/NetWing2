@@ -18,7 +18,6 @@ import (
 	driver "github.com/gomidi/rtmididrv"
 	"github.com/gorilla/websocket"
 	"github.com/hypebeast/go-osc/osc"
-	"github.com/zserge/webview"
 )
 
 // globals
@@ -81,21 +80,20 @@ func main() {
 
 	// create a http server to serve the UI both remote and to the local client
 	fmt.Println("Starting webserver")
-	go runWebserver()
+	runWebserver()
 
 	// web view settings
-	fmt.Println("Starting webview")
-	wb := webview.New(webview.Settings{
+	//fmt.Println("Starting webview")
+	/* wb := webview.New(webview.Settings{
 		Width:  1400,
 		Height: 800,
 		Title:  "NetWing",
-		/* URL:                    "file://" + rootDirectory + "/web/view/index.html", */
 		URL:       "http://localhost/ui/",
 		Resizable: true,
 	})
 	defer wb.Exit()
-	wb.Run()
-	cliLog("Engine", "Engine running GUI mode", 0)
+	wb.Run() */
+	//cliLog("Engine", "Engine running GUI mode", 0)
 }
 
 // helper functions and whatnot

@@ -219,10 +219,13 @@
         </div>
         <div id="closeModalWindow" class="navBtn">[Esc]</div>
       </div>
+      
       <div class="modalBody body_window">
        <div>
         <i>Enter window in format {width}/{height}</i>
+        <!-- leave the class it works for fader as well as for exec -->
         <br>
+        <i class="fader-exists-error disabled" id="exec-win-exists-error">Page with that number already exists</i>
         <div>
           <input type="text" placeholder="8/4" id="exec_window_win">
           <span> Page:<input type="number" placeholder="1" id="exec_window_page"></span>

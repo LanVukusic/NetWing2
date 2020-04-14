@@ -1,6 +1,7 @@
 // GLOBALS
 var USED_FADER_IDS = [-1]
-var curr_fader_page
+var USED_EXEC_PAGES = []
+var curr_exec_page
 
 
 // FUNCTIONS
@@ -14,11 +15,12 @@ function addInterfaceInstance(id, Hname, FriendlyName) {
 
 function addFaderInstance(fader_channel, midi_chan) {
   USED_FADER_IDS.push(parseInt(fader_channel));
-  $(".faders_holder").append('<div class="fader" style="order:'+fader_channel+'"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader'+fader_channel+'"><div><span><span>MIDI:</span><i id="fader-label-midi">'+midi_chan+'</i></span><span>Exec:<i id="fader-label-exec">'+fader_channel+'</i></span></div></div>');
+  $(".faders_holder").append('<div class="fader" style="order:' + fader_channel + '"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader' + fader_channel + '"><div><span><span>MIDI:</span><i id="fader-label-midi">' + midi_chan + '</i></span><span>Exec:<i id="fader-label-exec">' + fader_channel + '</i></span></div></div>');
 }
 
 function updateExecInstance(fader_channel, exec_page, midi_chan) {
-  $("#exec_page_1").find("div[itemid='"+fader_channel+"']").find("#exec_mapping").html(midi_chan);
+  $("#exec_page_"+ exec_page).find("div[itemid='" + fader_channel + "']").find("#exec_mapping").html(midi_chan);
+  $("#exec_page_" + exec_page).find("#exec_item" + fader_channel).attr("isset", "1")
   $(".modal_execs").addClass("disabled");
 }
 
@@ -70,44 +72,45 @@ function updateMIDItable(data) {
   }
 }
 
-function setMIDILearnFader(device, channel){
+function setMIDILearnFader(device, channel) {
   $("#fader_label_status").html("mapped");
-  $("#fader_label_midi_chn").html(""+device+"."+channel);
+  $("#fader_label_midi_chn").html("" + device + "." + channel);
   $("#fader-update-button").prop('disabled', false);
 }
 
-function setMIDILearnExec(device, channel){
+function setMIDILearnExec(device, channel) {
   $("#exec_label_status").html("mapped");
-  $("#exec_label_midi_chn").html(""+device+"."+channel);
+  $("#exec_label_midi_chn").html("" + device + "." + channel);
   $("#exec-update-button").prop('disabled', false);
   //console.log(device, channel)
 }
 
-function exec_tile_func (){
+function exec_tile_func() {
   $("#exec_span_title").html($(this).attr('itemid'));
-  if($(this).attr('isset') == 0){
+  if ($(this).attr('isset') == 0) {
     // is not set
     $("#exec-exists-error").html("Adding new exec mapping");
     $("#exec_label_status").html("unmapped");
     $("#exec_label_midi_chn").html("/");
     $("#exec-update-button").html("Create");
     $("#exec-remove-button").addClass("disabled");
-  }else{
+  } else {
     // is set already
     $("#exec-exists-error").html("Update existing exec");
     $("#exec_label_status").html("Mapped");
-    $("#exec_label_midi_chn").html(""+$(this).find("#exec_mapping").html());
+    $("#exec_label_midi_chn").html("" + $(this).find("#exec_mapping").html());
     $("#exec-update-button").html("Update");
     $("#exec-update-button").prop('disabled', false);
     $("#exec-remove-button").removeClass("disabled");
     $("#exec-remove-button").prop('disabled', false);
   }
-  
+
   $("#exec-update-button").attr('disabled', 'disabled');
   $("#execs-modal").removeClass("disabled");
 }
 
-function change_page (obj) {
+function change_exec_page(obj) {
+  curr_exec_page = parseInt(obj.target.innerText)
   // update main look
   $('.exec_page').each(function (i, obj) {
     $(obj).addClass("disabled")
@@ -119,37 +122,40 @@ function change_page (obj) {
   $('.page_holder').each(function (i, obj) {
     $(obj).removeClass("page_holder_active")
   });
-  $(this).addClass("page_holder_active")
 
-  curr_fader_page = parseInt($(obj).html())
+  $(this).addClass("page_holder_active")
 }
 
-function add_exec_page (page, width, heigh) {
+function add_exec_page(page, width, heigh) {
   let exec_page = $('<div>')
   exec_page.addClass('execs_up');
   exec_page.addClass('exec_page');
-  exec_page.attr({ id : 'exec_page_' + page });
+  exec_page.attr({
+    id: 'exec_page_' + page
+  });
 
   let counter = 1;
 
   for (let row = 0; row < parseInt(width); row++) {
     let rowHTML = $('<div>')
     rowHTML.addClass('execs_up_row');
-    for(let col = 0; col < parseInt(heigh); col ++){
-      let colHTML = $('<div class="execs_up_item" id="exec_item'+counter+'" itemid="'+counter+'" isset="0">'+counter+'<br><label id="exec_mapping"></label><br></div>')
+    for (let col = 0; col < parseInt(heigh); col++) {
+      let colHTML = $('<div class="execs_up_item" id="exec_item' + counter + '" itemid="' + counter + '" isset="0">' + counter + '<br><label id="exec_mapping"></label><br></div>')
       $(colHTML).click(exec_tile_func);
       rowHTML.append(colHTML)
-      counter ++;
+      counter++;
     }
     exec_page.append(rowHTML);
   }
 
+  curr_exec_page = page;
+  USED_EXEC_PAGES.push(page)
+
   $(".main_execs").append(exec_page);
 
-  let fton = $('<div class="page_holder">'+page+'</div>')
-  fton.click(change_page)
-
-  $(".execs_scrollbar").append(fton)
+  let page_change_button = $('<div class="page_holder">' + page + '</div>')
+  page_change_button.click(change_exec_page)
+  $(".execs_scrollbar").append(page_change_button)
 }
 
 $(
@@ -256,7 +262,7 @@ $(
 
   $("#execs-add-fader").click(function () {
     $("#fader-exists-error").addClass("disabled")
-    $("#fader_input_num").val(USED_FADER_IDS[USED_FADER_IDS.length -1]+1);
+    $("#fader_input_num").val(USED_FADER_IDS[USED_FADER_IDS.length - 1] + 1);
     $("#fader_span_title").html(": New");
     $("#fader_label_status").html("unmapped");
     $("#fader_label_midi_chn").html("/");
@@ -269,7 +275,7 @@ $(
   $("#fader-edit-button").click(function () {
     let faderID = $(this).parent().find('#fader-label-exec').html();
     let faderMIDI = $(this).parent().find('#fader-label-midi').html();
-    $("#fader_span_title").html(" : "+faderID);
+    $("#fader_span_title").html(" : " + faderID);
     $("#fader_input_num").val(faderID);
     $("#fader_label_status").html("mapped");
     $("#fader_label_midi_chn").html(faderMIDI);
@@ -280,7 +286,7 @@ $(
     let fader_channel = $("#fader_input_num").val(); // fader number on Magicq
     let midi_chan = $("#fader_label_midi_chn").html(); // MIDI channel that is mapped to the fader
 
-    if(USED_FADER_IDS.includes(parseInt(fader_channel))){
+    if (USED_FADER_IDS.includes(parseInt(fader_channel))) {
       // detected problem while trying to add an existing fader
       // display err
       $("#fader-exists-error").removeClass("disabled")
@@ -296,7 +302,7 @@ $(
     }
 
     conn.send(JSON.stringify(data))
-    
+
     // close the window
     $("#faders-modal").addClass("disabled");
   }),
@@ -309,26 +315,26 @@ $(
     }
     conn.send(JSON.stringify(data));
   }),
-  
-   /*  EXECS STUFF */
-   
+
+  /*  EXECS STUFF */
+
   $("#exec-learn-button").click(function () {
     // transmit the listening mode to the server
     data = {
       event: "changeMIDImode",
-      interface : 3,
+      interface: 3,
     }
     conn.send(JSON.stringify(data));
   }),
 
   $("#exec-update-button").click(function () {
-    let page  = parseInt(curr_fader_page);  // TOO DOOOOO
+    let page = parseInt(curr_exec_page); // TOO DOOOOO
     let form = $(this).parent().parent().find(".left");
     let isFader = form.find("input[name='exec_type']:checked").val();
     let midiOut = form.find("#midiOut").val();
     let midi_chan = form.find("#exec_label_midi_chn").html();
     let execId = $("#exec_span_title").html();
-    
+
     data = {
       event: "bindMIDIchannel",
       device: Math.floor(parseInt(midi_chan)),
@@ -340,10 +346,9 @@ $(
       //feedback: midiOut
     }
     conn.send(JSON.stringify(data))
-    
+
     // close the window
-    $("#faders-modal").addClass("disabled");
-    $("#exec_page_"+page).find("#exec_item"+execId).attr("isset","1")
+    $("#modal_window").addClass("disabled");
   }),
 
   $(".execs_plus").click(function () {
@@ -353,10 +358,18 @@ $(
   $("#closeModalWindow").click(function () {
     $(".modal_window").addClass("disabled");
   }),
-  
+
   $("#button_add_window").click(function (e) {
     let window = $("#exec_window_win").val();
-    let page = $("#exec_window_page").val();
+    let page = parseInt($("#exec_window_page").val());
+
+    if (USED_EXEC_PAGES.includes(page)) {
+      // user is naughty and wants to add an existing page
+      $("#exec-win-exists-error").removeClass("disabled");
+      return
+    }else{
+      $("#exec-win-exists-error").addClass("disabled");
+    }
 
     data = {
       event: "addNewPage",
