@@ -183,6 +183,21 @@ $(
     conn.send(data)
   }),
 
+  $("#addInterfaceOSC").click(function () {
+    let host = $("#OSC_ip_add").val();
+
+    let data = {
+      event: "restartOSC",
+      host: host
+    }
+    data = JSON.stringify(data)
+    conn.send(data)
+    console.log(data);
+    
+  }),
+
+
+
   $("#addInterfaceGenericMIDI").click(function () {
     $(".modal_interfaces").removeClass("disabled");
   }),

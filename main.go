@@ -26,6 +26,7 @@ var listenDeviceType int                                       // type of listen
 var mappings map[helpers.InternalDevice]helpers.InternalOutput // array of mappings.
 var OSClient osc.Client
 var exec_pages []helpers.ExecWindow
+var OSClient2 osc.Client
 
 // packeging
 var boxView packr.Box
@@ -74,9 +75,6 @@ func main() {
 
 	// start loopcheck to alert for disconnected devices
 	go doEvery(2000*time.Millisecond, loopCheck)
-
-	//start OSC
-	OSClient = *osc.NewClient("localhost", 8000)
 
 	// create a http server to serve the UI both remote and to the local client
 	fmt.Println("Starting webserver")
@@ -130,6 +128,11 @@ func loopCheck() {
 		}
 	}
 	return
+}
+
+func OSCstart(h string, oscIn *osc.Client) {
+	//start OSC
+	*oscIn = *osc.NewClient(h, 8000)
 }
 
 func doEvery(d time.Duration, f func()) {
@@ -334,6 +337,11 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		exec_pages = append(exec_pages, temp)
 
 		broadcastMessage(temp)
+
+	case "restartOSC":
+		fmt.Println(raw["host"].(string))
+		OSCstart(raw["host"].(string), &OSClient2)
+		cliLog("OSC", "Listening: "+raw["host"].(string), 1)
 	}
 
 }
