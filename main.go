@@ -709,5 +709,4 @@ func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (er
 
 	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil
-
 }
