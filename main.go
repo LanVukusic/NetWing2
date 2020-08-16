@@ -17,17 +17,9 @@ import (
 	"github.com/gomidi/connect"
 	driver "github.com/gomidi/rtmididrv"
 	"github.com/gorilla/websocket"
-	"github.com/hypebeast/go-osc/osc"
+
+	"github.com/zserge/webview"
 )
-
-// globals
-var MIDIListenMode bool                                        // true:active interface, false:binding interface.
-var listenDeviceType int                                       // type of listening.
-var mappings map[helpers.InternalDevice]helpers.InternalOutput // array of mappings.
-var OSClient osc.Client
-var exec_pages []helpers.ExecWindow
-
-//var OSClient2 osc.Client
 
 // packeging
 var boxView packr.Box
@@ -51,14 +43,8 @@ var drvMIDI connect.Driver
 var upgrader websocket.Upgrader
 var wsConnections []*websocket.Conn // supports max 30 clients
 
+// main
 func main() {
-	//init midi
-	drvMIDI = nil
-	MIDIListenMode = false
-	mappings = make(map[helpers.InternalDevice]helpers.InternalOutput)
-
-	exec_pages = []helpers.ExecWindow{}
-
 	upgrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -74,81 +60,79 @@ func main() {
 	fmt.Println("locking Threads")
 	runtime.LockOSThread()
 
-	// start loopcheck to alert for disconnected devices
+	//start loopcheck to alert for disconnected devices
 	go doEvery(2000*time.Millisecond, loopCheck)
+
+	//init midi
+	drvMIDI = nil
+
+	/* //start OSC
+	fmt.Println("Starting OSC")
+	osclib.StartOSCServer() */
 
 	// create a http server to serve the UI both remote and to the local client
 	fmt.Println("Starting webserver")
-	runWebserver()
+	go runWebserver()
 
 	// web view settings
-	//fmt.Println("Starting webview")
-	/* wb := webview.New(webview.Settings{
-		Width:  1400,
-		Height: 800,
-		Title:  "NetWing",
-		URL:       "http://localhost/ui/",
-		Resizable: true,
-	})
-	defer wb.Exit()
-	wb.Run() */
-	//cliLog("Engine", "Engine running GUI mode", 0)
+	if true {
+		fmt.Println("Starting webview")
+		wb := webview.New(webview.Settings{
+			Width:  1400,
+			Height: 800,
+			Title:  "NetWing",
+			/* URL:                    "file://" + rootDirectory + "/web/view/index.html", */
+			URL:       "http://localhost/ui/",
+			Resizable: true,
+		})
+		cliLog("Engine", "Engine running GUI mode", 0)
+		defer wb.Exit()
+		wb.Run()
+	} else {
+		cliLog("Engine", "Engine running CLI mode", 0)
+		go func() {
+			for true {
+				// run infinite loop so the thread does not terminate
+				//stupid me ofc it terminates.... it runs in a different thread
+			}
+		}()
+	}
+
+}
+
+func midiDisconnected() {
+
 }
 
 // helper functions and whatnot
 func loopCheck() {
-	devices, _ := getMIDIDevices(&drvMIDI)
+	devices, _ := getMIDIDevices(drvMIDI)
 
 	// check for inputs
 	ins := devices.Ins
 
-	for i := range midi2idMappings { // search through all added interfaces
-		if midi2idMappings[i].MidiPort == nil { // check if we are out of interfaces
-			break
-		}
-		/* fmt.Println(ins)
-		fmt.Println(addedIterf[]) */
-
-		var enabled = false
-
-		for _, allIterf := range ins { // compare the added interface t osee if you can see it in available device list
-			if midi2idMappings[i].MidiPort.String() == allIterf.NameWithID { // we found an added device in our connected list
-				enabled = true
-				if !midi2idMappings[i].WasOnline { // device was previously disconnected so we have to reconnect it back
-					ListenMidi(&drvMIDI, allIterf.ID, midi2idMappings[i].BindID, false)
-					midi2idMappings[i].WasOnline = true
-				}
-				break
+	for i, addedIterf := range midi2idMappings {
+		if addedIterf.MidiPort == nil { // check if we are out of interfaces
+			if i == 0 {
+				//fmt.Println("works")
+				return
 			}
 		}
-		if !enabled { // device was not found in active interfaces therefore it is disconnected
-			if midi2idMappings[i].WasOnline { // if device was not disconnected before this function call
-				cliLog("MIDI", fmt.Sprintf("Device disconnected: %s", midi2idMappings[i].MidiPort), 2)
-				midi2idMappings[i].WasOnline = false // mark it as disconnected device
+		for _, allIterf := range ins {
+			if addedIterf.MidiPort.String() == allIterf.NameWithID {
+				fmt.Println("works", addedIterf.BindID)
+				break
+			} else {
+				fmt.Println("works not")
 			}
 		}
 	}
-	return
-}
-
-func OSCstart(h string, oscIn *osc.Client) {
-	//start OSC
-	*oscIn = *osc.NewClient(h, 8000)
 }
 
 func doEvery(d time.Duration, f func()) {
 	for range time.Tick(d) {
 		f()
 	}
-}
-
-func containsValue(m map[helpers.InternalDevice]helpers.InternalOutput, v helpers.InternalOutput) bool {
-	for _, x := range m {
-		if x == v {
-			return true
-		}
-	}
-	return false
 }
 
 func addUIdevice(deviceType int16, hName string, fName string, devID int, socket *websocket.Conn) {
@@ -159,67 +143,22 @@ func addUIdevice(deviceType int16, hName string, fName string, devID int, socket
 	socket.WriteJSON(data)
 }
 
-func addUIFader(device interface{}, chn interface{}, MQChanel interface{}, socket *websocket.Conn, bcast bool) {
-	// respond with permission to create UI fader
-	data := helpers.MappingResponse{
-		Event:     "MappingsResponse",
-		Interface: 0, // 0= fader, 3 = exec
-		DeviceID:  device.(int),
-		ChannelID: chn.(byte),
-		FaderID:   MQChanel.(int),
-	}
-
-	if bcast {
-		broadcastMessage(data)
-		return
-	}
-	socket.WriteJSON(data)
-	return
-}
-
-func addUIExec(device interface{}, chn interface{}, execID interface{}, pageID interface{}, socket *websocket.Conn, bcast bool) {
-	// respond with permission to create UI fader
-	data := helpers.MappingResponse{
-		Event:     "MappingsResponse",
-		Interface: 3, // exec
-		DeviceID:  device.(int),
-		ChannelID: chn.(byte),
-		ExecID:    execID.(int),
-		ExecPage:  pageID.(int),
-	}
-
-	if bcast {
-		broadcastMessage(data)
-		return
-	}
-	socket.WriteJSON(data)
-	return
-}
-
 func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 	var raw map[string]interface{}
 	err := json.Unmarshal(p, &raw)
 	if err != nil {
 		handleErr(err, fmt.Sprintf("Error while parsing JSON from %s", socket.LocalAddr().String()), true)
 	}
+
 	switch raw["event"] {
-	// command for getting a list of active devices
 	case "getMidiDevices":
-		data, err := getMIDIDevices(&drvMIDI)
+		data, err := getMIDIDevices(drvMIDI)
 		if err != nil {
 			handleErr(err, "Error while getting MIDI devices", true)
 		} else {
 			socket.WriteJSON(data)
 		}
 		break
-
-	// command for setting midi mode to binding
-	case "changeMIDImode": // changes midi mode to BIND
-		fmt.Println("msg received BINDING active")
-		MIDIListenMode = false
-		listenDeviceType = int(raw["interface"].(float64))
-		break
-
 	case "addInterface":
 		devType := int(raw["deviceType"].(float64))
 
@@ -243,6 +182,8 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 						// device allready exists
 						cliLog("MIDI", "Midi device already active", 1)
 						return
+						break
+
 					}
 				}
 			}
@@ -253,7 +194,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			}
 
 			// handle its inputs / outputs
-			ListenMidi(&drvMIDI, int(raw["inDevice"].(float64)), id, true)
+			ListenMidi(int(raw["inDevice"].(float64)), id)
 			hName := fmt.Sprintf("%v", raw["HardwareName"])
 			fName := fmt.Sprintf("%v", raw["FriendlyName"])
 			sID := strconv.Itoa(id)
@@ -268,92 +209,8 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 			broadcastMessage(data)
 
 		}
-	case "bindMIDIchannel":
-		// future me will be thankful: https://blog.golang.org/maps
-
-		//is channel used?
-		tempKey := helpers.InternalDevice{
-			InterfaceType: 0,
-			DeviceID:      int(raw["device"].(float64)),
-			ChannelID:     byte(raw["chn"].(float64)),
-		}
-
-		tempVal := helpers.InternalOutput{
-			OutType: raw["extType"].(float64), // 3 is an EXEC, 0 is fader
-			OutChan: int(raw["extChn"].(float64)),
-			OutPage: int(raw["execPage"].(float64)),
-			Fade:    raw["typeFader"].(bool),
-		}
-
-		//check the validity of mapping. two inputs cant be on same out and vice versa.
-		for key, val := range mappings {
-			if key.ChannelID == tempKey.ChannelID && key.DeviceID == tempKey.DeviceID {
-				// this midi channel is in use
-				cliLog("Mapping", "MIDI channel is already used on the "+"str"+": "+fmt.Sprintf("%v", val.OutChan)+", page:"+fmt.Sprintf("%v", val.OutPage), 1)
-				return
-			}
-			if val.OutType == tempVal.OutType && val.OutChan == tempVal.OutChan && val.OutPage == tempVal.OutPage {
-				cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 1)
-				return
-			}
-		}
-
-		// create an internal mapping
-		if int(raw["extType"].(float64)) == 0 { // FADER
-			// fader
-			mappings[tempKey] = tempVal
-			addUIFader(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), socket, true)
-			break
-		} else {
-			if int(raw["extType"].(float64)) == 3 { // EXEC
-				// add an entry to the mappings array
-				mappings[tempKey] = tempVal
-				addUIExec(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), socket, true)
-				break
-			}
-		}
-
-	case "addNewPage":
-
-		temp := helpers.ExecWindow{
-			Event:  "newExecPage",
-			Page:   int(raw["page"].(float64)),
-			Width:  int(raw["width"].(float64)),
-			Height: int(raw["height"].(float64)),
-		}
-		exec_pages = append(exec_pages, temp)
-
-		broadcastMessage(temp)
-
-	case "restartOSC":
-		//fmt.Println(raw["host"].(string))
-		OSCstart(raw["host"].(string), &OSClient)
-		cliLog("OSC", "Listening: "+raw["host"].(string), 1)
-
-	case "removeMapping":
-		removeMapping(int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), raw["extType"].(float64))
 	}
 
-}
-
-func removeMapping(channel int, page int, typ float64) {
-	fmt.Println(channel, page, typ)
-	fmt.Println(mainmappings)
-	fmt.Println(mappings)
-
-	for key, element := range mappings {
-		if element.OutType == typ && element.OutPage == page && element.OutChan == channel {
-			delete(mappings, key)
-			removeMsg := helpers.MappingRemove{
-				Event:   "removeMappingRes",
-				Page:    page,
-				Channel: channel,
-				Type:    typ,
-			}
-			broadcastMessage(removeMsg)
-			return
-		}
-	}
 }
 
 func broadcastMessage(msg interface{}) {
@@ -380,16 +237,6 @@ func upgradeConnection(w http.ResponseWriter, r *http.Request) {
 		for {
 			messageType, p, err := wsConnection.ReadMessage()
 			if err != nil {
-				if strings.Contains(err.Error(), "close 1001 (going away)") {
-					cliLog("WebServer", "Disconnect! Bye bye "+wsConnection.LocalAddr().String(), 1)
-					for i := 0; i < len(wsConnections); i++ {
-						if wsConnections[i] == wsConnection {
-							// we have found the faulty connection, so we remove it to prevent faulty broadcasting
-							wsConnections = append((wsConnections)[:i], wsConnections[i+1:]...)
-							return
-						}
-					}
-				}
 				handleErr(err, "Websocket message reading error for: "+wsConnection.LocalAddr().String(), true)
 				return
 			}
@@ -426,30 +273,24 @@ func runWebserver() {
 	http.ListenAndServe(":80", nil)
 }
 
-func getMIDIDevices(drv *connect.Driver) (outDevices helpers.MidiPackage, err error) {
+func getMIDIDevices(drv connect.Driver) (outDevices helpers.MidiPackage, err error) {
 	outDevices.Event = "refreshMidiRet"
-
-	// does not get inputs, aka an error
-	if *drv == nil { // if driver does not exist yet, we create the new driver
-		cliLog("MIDI", "No active Midi driver", 1)
-		*drv, err = driver.New()
+	if drv == nil {
+		drv, err = driver.New()
 		if err != nil {
 			handleErr(err, "Failed creation of MIDI device driver.", true)
-			return outDevices, err
+			return
 		}
-		cliLog("MIDI", "MIDI driver activated", 0)
 	}
 
-	var tempDrv = *drv // use the drivers value and not the pointer from that point on
-
-	// gets the inputs
-	ins, err := tempDrv.Ins()
-	if err != nil { // handle the error
-		handleErr(err, "Error receiving midi device list", true)
+	//gets the inputs
+	ins, err := drv.Ins()
+	if err != nil {
 		return outDevices, err
 	}
 
 	for _, el := range ins {
+
 		outDevices.Ins = append(outDevices.Ins, helpers.MidiDevice{
 			// it splits the string by spaces, removeslast slice (the number) and joins it back together to form a string
 			NameWithID: el.String(),
@@ -457,7 +298,7 @@ func getMIDIDevices(drv *connect.Driver) (outDevices helpers.MidiPackage, err er
 			ID:         el.Number()})
 	}
 
-	outs, err := tempDrv.Outs()
+	outs, err := drv.Outs()
 	if err != nil {
 		return outDevices, err
 	}
@@ -481,98 +322,8 @@ func json2text(in interface{}) (out string, err error) {
 }
 
 func handleMidiEvent(in []byte, time int64, deviceID int) {
-
-	MIDItype := int(in[0])
-	if MIDItype == 192 {
-		cliLog("MIDI", "Cant map to 'CONTROLL CHANGE' messages", 2)
-		return
-	}
-	MIDIchannel := in[1]
-	MIDIvalue := in[2]
-
-	if MIDIListenMode {
-		// input has an active binding
-		tempIn := helpers.InternalDevice{
-			InterfaceType: 0, // MIDI = 0,
-			DeviceID:      deviceID,
-			ChannelID:     MIDIchannel,
-		}
-		tempOut, exists := mappings[tempIn]
-
-		if exists {
-
-			switch tempOut.OutType {
-			case 0:
-				fmt.Println("BOUND FEJDR")
-				temp := helpers.FaderUpdate{
-					Event:   "UpdateFader",
-					Type:    0,
-					FaderID: tempOut.OutChan,
-					Value:   MIDIvalue,
-				}
-				broadcastMessage(temp)
-				msg := osc.NewMessage("/pb/" + fmt.Sprintf("%d", tempOut.OutChan))
-				msg.Append(fmt.Sprintf("%d", int((int(MIDIvalue) * 100 / 127))))
-				OSClient.Send(msg)
-				break
-			case 3:
-				// check if it's a button
-				fmt.Println("BOUND EGZEK")
-				var out int
-				if !tempOut.Fade {
-					//check control type
-					switch MIDItype {
-					case 144:
-						// note on - we turn button on
-						out = 127
-						break
-					case 128:
-						// note off -we turn button off
-						out = 0
-						break
-					case 176:
-						// if value is grater than 0, button is on
-						if MIDIvalue != 0 {
-							out = 127
-							break
-						}
-					}
-				} else {
-					out = int(MIDIvalue)
-				}
-
-				temp := helpers.ExecUpdate{
-					Event:    "UpdateFader",
-					Type:     3,
-					FaderID:  tempOut.OutChan,
-					PageID:   tempOut.OutPage,
-					FadeType: tempOut.Fade,
-					Value:    out,
-				}
-
-				broadcastMessage(temp)
-				msg := osc.NewMessage("/exec/" + fmt.Sprintf("%d", tempOut.OutPage) + "/" + fmt.Sprintf("%d", tempOut.OutChan))
-				msg.Append(fmt.Sprintf("%d", int((out * 100 / 127))))
-				//msg.Append(int((out * 100 / 127)))
-				OSClient.Send(msg)
-				break
-			}
-		} else {
-			// input has no active binding
-			cliLog("MIDI", fmt.Sprintf("Type: %v, Chn: %v, Val: %v, Device: %v", MIDItype, MIDIchannel, MIDIvalue, int(deviceID)), 0)
-		}
-	} else {
-		// binding interface mode
-		temp := helpers.MIDILearnMessage{
-			Event:     "learnMidiRet",
-			Interf:    listenDeviceType,
-			DeviceID:  deviceID,
-			ChannelID: MIDIchannel,
-		}
-		broadcastMessage(temp)
-		MIDIListenMode = true // exit midi mapping mode
-	}
-
+	fmt.Println(fmt.Sprintf("Chn: %s, Val: %s, Device: %s", int(in[1]), int(in[2]), int(deviceID)))
+	cliLog("MIDI", fmt.Sprintf("Chn: %v, Val: %v, Device: %v", int(in[1]), int(in[2]), int(deviceID)), 0)
 }
 
 func cliLog(cause string, body string, threatLevel int) {
@@ -583,8 +334,6 @@ func cliLog(cause string, body string, threatLevel int) {
 		ThreatLevel: threatLevel,
 	}
 	broadcastMessage(alert)
-	fmt.Println(alert)
-	return
 }
 
 func handleErr(err error, msg string, bcast bool) {
@@ -596,23 +345,22 @@ func handleErr(err error, msg string, bcast bool) {
 }
 
 //ListenMidi checks availability and ATTACHES a MIDI listener to the device
-func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err error) {
-	// first check for existence of MIDI driver
-	if *drv == nil { // if driver does not exist yet, we create the new driver
-		cliLog("MIDI", "No active Midi driver  ... activating", 1)
-		*drv, err = driver.New()
+func ListenMidi(id int, bind int) (err error) {
+	// check if the MIDI driver is missing
+	if drvMIDI == nil {
+		var err error
+		drvMIDI, err = driver.New()
 		if err != nil {
-			handleErr(err, "Failed creation of MIDI device driver.", true)
+			handleErr(err, "Error creating midi driver", true)
 			return err
 		}
-		cliLog("MIDI", "MIDI driver activated", 0)
 	}
 
 	// this line gets the device "id" from the driver, opens it and returns the active device
 	in, err := connect.OpenIn(drvMIDI, id, "")
 
 	//handles the potential error
-	if err != nil { // if error exists, handle it and return
+	if err != nil {
 		handleErr(err, "MIDI device:"+string(id)+"is unavailable", true)
 		if in.IsOpen() {
 			in.Close()
@@ -622,39 +370,31 @@ func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err erro
 
 	//if the device is successfully opened it tries to attach a listener
 	if in.IsOpen() {
+
 		//add a binding to the monitoring array.
-		if newDevice {
-			for i, interf := range midi2idMappings {
-				if interf.MidiPort == nil { // finds the first empty entry in an array
-					midi2idMappings[i] = helpers.Bind2MIDI{ // assign it the object with the device
-						BindID:    bind,
-						MidiPort:  in,
-						WasOnline: true}
-					break
-				}
+		for i, interf := range midi2idMappings {
+			if interf.MidiPort == nil {
+				midi2idMappings[i] = helpers.Bind2MIDI{
+					BindID:   bind,
+					MidiPort: in}
+				break
 			}
 		}
 
-		// set a listener to the device
-		err := in.SetListener(handleMidiEvent)
-
-		// check for potential errors
-		if err != nil { // if unsuccessful, handle the error
+		//if unsuccessful, handle the error
+		if err != nil {
 			handleErr(err, "MIDI device:"+string(id)+"cant receive a listener", true)
 			if in.IsOpen() {
 				//stop the device
 				in.StopListening()
 				in.Close()
 			}
+		} else {
 			return err
 		}
-		cliLog("MIDI", fmt.Sprintf("Listening to MIDI device %v", id), 0)
-		return nil
-
 	}
-	cliLog("MIDI", "Midi device is not open", 2)
+	cliLog("MIDI Interf.", fmt.Sprintf("Listening to MIDI device %v", id), 0)
 	return nil
-
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device
@@ -670,6 +410,56 @@ func StopListenMidi(id int) {
 	cliLog("MIDI", fmt.Sprintf("MIDI device %v successfully closed", id), 0)
 }
 
+func handleMIDIevent(data []byte, deltaMicroseconds int64) {
+	//fmt.Println(data)
+	//osclib.SendOSC(int(data[1]), int(data[2]))
+	msg := "Chan: " + strconv.Itoa(int(data[1])) + " Value: " + strconv.Itoa((int(data[2])))
+	//handlers.W.Eval("cliLog (0, MIDI in, " + msg + ");")
+	fmt.Println(msg)
+}
+
+// function loops through devices and initializes their drivers and updates the UI
+// TO DO NOT WORKING YET
+func initializeSavedDevices(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
+	active := true
+	for _, device := range devlist {
+		//check for type and create the driver
+		if device.DeviceType == 0 { // it's a MIDI device
+
+			//if MIDI has no active driver create one
+			if drvMIDI == nil {
+				var err error
+				drvMIDI, err = driver.New()
+				if err != nil {
+					handleErr(err, "cant create MIDI driver", true)
+					return err
+				}
+			}
+
+			//The driver is active, so assign a listener to the MIDI device.
+			listenErr := ListenMidi(device.HardwareID, device.HardwareID)
+
+			if listenErr != nil {
+				handleErr(listenErr, "unable to listen to device", true)
+				active = false
+			}
+
+		} else {
+			handleErr(nil, "unrecognized device type", true)
+		}
+
+		//update ui
+		addUIdevice(device.DeviceType, device.HardwareName, device.FriendlyName, device.BindID, socket)
+
+		//check if device exists
+		// TO DO , disabled and enabled interfaces
+		fmt.Println(active)
+
+	}
+	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
+	return nil
+}
+
 func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (err error) {
 	//active := true
 	for _, device := range devlist {
@@ -680,34 +470,8 @@ func initializeUi(devlist []helpers.InterfaceDevice, socket *websocket.Conn) (er
 		}
 
 		//check if device exists
+		// TO DO , disabled and enabled interfaces
 	}
-
-	// update pages
-	for _, s := range exec_pages {
-		fmt.Println(s)
-		temp := helpers.ExecWindow{
-			Event:  "newExecPage",
-			Page:   s.Page,
-			Width:  s.Width,
-			Height: s.Height,
-		}
-		socket.WriteJSON(temp)
-	}
-
-	for k, v := range mappings {
-		//fmt.Printf("key[%s] value[%s]\n", k, v)
-		switch v.OutType {
-		case 0:
-			addUIFader(k.DeviceID, k.ChannelID, v.OutChan, socket, false)
-			break
-		case 3:
-			addUIExec(k.DeviceID, k.ChannelID, v.OutChan, v.OutPage, socket, false)
-			break
-		}
-
-	}
-
 	cliLog("Initialization", "Init completed. Devices loaded successfully", 0)
 	return nil
-
 }
