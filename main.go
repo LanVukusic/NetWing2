@@ -26,7 +26,8 @@ var listenDeviceType int                                       // type of listen
 var mappings map[helpers.InternalDevice]helpers.InternalOutput // array of mappings.
 var OSClient osc.Client
 var exec_pages []helpers.ExecWindow
-var OSClient2 osc.Client
+
+//var OSClient2 osc.Client
 
 // packeging
 var boxView packr.Box
@@ -340,7 +341,7 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 
 	case "restartOSC":
 		fmt.Println(raw["host"].(string))
-		OSCstart(raw["host"].(string), &OSClient2)
+		OSCstart(raw["host"].(string), &OSClient)
 		cliLog("OSC", "Listening: "+raw["host"].(string), 1)
 	}
 
@@ -542,6 +543,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 				broadcastMessage(temp)
 				msg := osc.NewMessage("/exec/" + fmt.Sprintf("%d", tempOut.OutPage) + "/" + fmt.Sprintf("%d", tempOut.OutChan))
 				msg.Append(fmt.Sprintf("%d", int((out * 100 / 127))))
+				//msg.Append(int((out * 100 / 127)))
 				OSClient.Send(msg)
 				break
 			}

@@ -153,9 +153,23 @@ function add_exec_page(page, width, heigh) {
 
   $(".main_execs").append(exec_page);
 
-  let page_change_button = $('<div class="page_holder">' + page + '</div>')
+
+  // change to current page
+  $('.exec_page').each(function (i, obj) {
+    $(obj).addClass("disabled")
+  });
+  $("#exec_page_" + page).removeClass("disabled")
+
+  //update menu look
+  $('.page_holder').each(function (i, obj) {
+    $(obj).removeClass("page_holder_active")
+  });
+
+  let page_change_button = $('<div class="page_holder page_holder_active" id="page_button_'+ page +'">' + page + '</div>')
   page_change_button.click(change_exec_page)
   $(".execs_scrollbar").append(page_change_button)
+
+
 }
 
 $(
@@ -394,6 +408,8 @@ $(
     }
 
     conn.send(JSON.stringify(data))
+
+    $("#window-modal").addClass("disabled");
   }),
 
 );
