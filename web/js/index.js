@@ -10,7 +10,7 @@ function addDevice(id, name) {
 }
 
 function addInterfaceInstance(id, Hname, FriendlyName) {
-  $("#interface-space").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div></div>');
+  $("#interface-space").append('<div class="interface_inst" id ="' + id.toString() + '"><div class="inst_back"><div class="title">' + FriendlyName + '</div><div>' + Hname + ' : ' + id.toString() + '</div></div><div class="inst_last"><button>Settings</button></div></div>');
 }
 
 function addFaderInstance(fader_channel, midi_chan) {
@@ -323,11 +323,13 @@ $(
     }
 
     data = {
-      event: "bindMIDIchannel",
-      device: Math.floor(parseInt(midi_chan)),
-      chn: parseInt(midi_chan.split('.')[1]),
-      extChn: parseInt(fader_channel),
-      extType: 0 // 0 = fader
+      event: "bindMIDIchannel",  // type of event
+      device: Math.floor(parseInt(midi_chan)), // number of midi device, basically a device id
+      chn: parseInt(midi_chan.split('.')[1]),  // MIDI channel
+      extChn: parseInt(fader_channel),  // number of fader to controll
+      execPage: 0,  // fader page
+      typeFader: true,  // should it fade or snap
+      extType: 0 // 0 = fader, 3 = exec
     }
 
     conn.send(JSON.stringify(data))
@@ -378,6 +380,21 @@ $(
 
     // close the window
     $("#modal_window").addClass("disabled");
+  }),
+
+  $("#exec-remove-button").click(function () {
+    let page = parseInt(curr_exec_page);
+    let form = $(this).parent().parent().find(".left");
+    let midi_chan = form.find("#exec_label_midi_chn").html();
+    let execId = $("#exec_span_title").html();
+
+    data = {
+      event: "removeMapping",
+      extChn: parseInt(execId),
+      execPage: page,
+      extType: 3, // 0 = fader, 4 = exec
+    }
+    conn.send(JSON.stringify(data));
   }),
 
   $(".execs_plus").click(function () {

@@ -176,8 +176,8 @@ button[disabled] {
   flex-wrap: wrap;
   width: 100%;
   color: rgba(255, 255, 255, 0.966);
-  border-bottom: solid 2px rgba(245, 208, 97, 0.7);
-  border-top: solid 2px rgba(245, 208, 97, 0.7);
+  border-bottom: solid 3px rgb(150,154,164);
+  border-top: solid 3px rgb(150,154,164);
   background-color: #2b3249;
   /* border: 2px solid #282f44; */
   margin: 30px 0px;
@@ -223,10 +223,18 @@ button[disabled] {
 
 .inst_last {
   flex: 5;
+  font-size: 90%;
   display: flex;
   align-items: center;
   margin-left: auto;
 }
+
+.inst_last>button{
+  border-top: none;
+  border-bottom: none;
+  border-right: none;
+}
+
 
 .settings_nav {
   width: 100%;
@@ -361,8 +369,8 @@ input[type=number] {
   display: flex;
   flex-wrap: wrap;
   color: rgba(255, 255, 255, 0.966);
-  border-bottom: solid 2px rgba(245, 208, 97, 0.7);
-  border-top: solid 2px rgba(245, 208, 97, 0.7);
+  border-bottom: solid 2px rgb(150,154,164);
+  border-top: solid 2px rgb(150,154,164);
   background-color: #2b3249;
   margin: 30px 10%;
   font-size: 1.6em;
@@ -680,8 +688,8 @@ input[type=range]::-moz-range-progress {
 
 .page_holder {
   color: rgba(255, 255, 255, 0.733);
-  padding: 1% 2%;
-  margin: 0 0.5%;
+  padding: 10px 20px;
+  margin: 0 10px;
   border: solid 2px #e6c04f00;
   cursor: pointer;
   transition: ease-in-out(5);

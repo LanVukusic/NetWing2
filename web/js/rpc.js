@@ -51,18 +51,29 @@ if (window["WebSocket"]) {
         break
 
       case "UpdateFader":
+        console.log(evt.Type);
         if(evt.Type == 0){  // update fader
           $("#fader"+evt.FaderID).val(parseInt(evt.Value));
         }else if (evt.Type == 3){  // update exec
           let val = Math.floor(evt.Value * 100 / 127)
           $("#exec_page_"+evt.PageID).find("#exec_item"+evt.FaderID).css("background", "linear-gradient(90deg, #ffffff57 "+val+"%, #ffffff1e "+val+"%)")
-          $("#fader"+evt.FaderID).val(parseInt(evt.Value));
         }
         break
       
-        case "newExecPage":
-          add_exec_page(evt.Page,evt.Width, evt.Height)
+      case "newExecPage":
+        add_exec_page(evt.Page,evt.Width, evt.Height)
       
+      case "removeMappingRes":
+        console.log(evt);
+        if(evt.Type == 3){  // exec 
+          let exec = $("#exec_page_" + evt.Page).find("#exec_item" + evt.Channel);
+          console.log(exec);
+          exec.attr("isset", 0);
+          exec.find("#exec_mapping").html("");
+          exec.css("background", "unset");
+          exec.css("background-color", "#ffffff0e");
+          $("#execs-modal").addClass("disabled");
+        }
 
         
     }

@@ -270,58 +270,44 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		}
 	case "bindMIDIchannel":
 		// future me will be thankful: https://blog.golang.org/maps
+
+		//is channel used?
+		tempKey := helpers.InternalDevice{
+			InterfaceType: 0,
+			DeviceID:      int(raw["device"].(float64)),
+			ChannelID:     byte(raw["chn"].(float64)),
+		}
+
+		tempVal := helpers.InternalOutput{
+			OutType: raw["extType"].(float64), // 3 is an EXEC, 0 is fader
+			OutChan: int(raw["extChn"].(float64)),
+			OutPage: int(raw["execPage"].(float64)),
+			Fade:    raw["typeFader"].(bool),
+		}
+
+		//check the validity of mapping. two inputs cant be on same out and vice versa.
+		for key, val := range mappings {
+			if key.ChannelID == tempKey.ChannelID && key.DeviceID == tempKey.DeviceID {
+				// this midi channel is in use
+				cliLog("Mapping", "MIDI channel is already used on the "+"str"+": "+fmt.Sprintf("%v", val.OutChan)+", page:"+fmt.Sprintf("%v", val.OutPage), 1)
+				return
+			}
+			if val.OutType == tempVal.OutType && val.OutChan == tempVal.OutChan && val.OutPage == tempVal.OutPage {
+				cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 1)
+				return
+			}
+		}
+
 		// create an internal mapping
 		if int(raw["extType"].(float64)) == 0 { // FADER
 			// fader
-			tempKey := helpers.InternalDevice{
-				InterfaceType: 0,
-				DeviceID:      int(raw["device"].(float64)),
-				ChannelID:     byte(raw["chn"].(float64)),
-			}
-
-			tempVal := helpers.InternalOutput{
-				OutType: 0, // 0 is a fader
-				OutChan: int(raw["extChn"].(float64)),
-				OutPage: 0,
-				Fade:    true,
-			}
-
-			if containsValue(mappings, tempVal) {
-				// the mapping already existed
-				cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
-				return
-			}
-
-			// add an entry to the mappings array
 			mappings[tempKey] = tempVal
-
 			addUIFader(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), socket, true)
 			break
-
 		} else {
 			if int(raw["extType"].(float64)) == 3 { // EXEC
-				tempKey := helpers.InternalDevice{
-					InterfaceType: 0, // MIDI
-					DeviceID:      int(raw["device"].(float64)),
-					ChannelID:     byte(raw["chn"].(float64)),
-				}
-
-				tempVal := helpers.InternalOutput{
-					OutType: 3, // 3 is a EXEC
-					OutChan: int(raw["extChn"].(float64)),
-					OutPage: int(raw["execPage"].(float64)),
-					Fade:    raw["typeFader"].(bool),
-				}
-
-				if containsValue(mappings, tempVal) {
-					// the mapping already existed
-					cliLog("Mapping", "Can't map 2 inputs to same output interfaces", 2)
-					return
-				}
-
 				// add an entry to the mappings array
 				mappings[tempKey] = tempVal
-
 				addUIExec(int(raw["device"].(float64)), byte(raw["chn"].(float64)), int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), socket, true)
 				break
 			}
@@ -340,11 +326,34 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		broadcastMessage(temp)
 
 	case "restartOSC":
-		fmt.Println(raw["host"].(string))
+		//fmt.Println(raw["host"].(string))
 		OSCstart(raw["host"].(string), &OSClient)
 		cliLog("OSC", "Listening: "+raw["host"].(string), 1)
+
+	case "removeMapping":
+		removeMapping(int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), raw["extType"].(float64))
 	}
 
+}
+
+func removeMapping(channel int, page int, typ float64) {
+	fmt.Println(channel, page, typ)
+	fmt.Println(mainmappings)
+	fmt.Println(mappings)
+
+	for key, element := range mappings {
+		if element.OutType == typ && element.OutPage == page && element.OutChan == channel {
+			delete(mappings, key)
+			removeMsg := helpers.MappingRemove{
+				Event:   "removeMappingRes",
+				Page:    page,
+				Channel: channel,
+				Type:    typ,
+			}
+			broadcastMessage(removeMsg)
+			return
+		}
+	}
 }
 
 func broadcastMessage(msg interface{}) {
@@ -491,9 +500,10 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 		tempOut, exists := mappings[tempIn]
 
 		if exists {
-			//fmt.Println("BOUND", tempOut, in[2])
+
 			switch tempOut.OutType {
 			case 0:
+				fmt.Println("BOUND FEJDR")
 				temp := helpers.FaderUpdate{
 					Event:   "UpdateFader",
 					Type:    0,
@@ -507,8 +517,8 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 				break
 			case 3:
 				// check if it's a button
+				fmt.Println("BOUND EGZEK")
 				var out int
-
 				if !tempOut.Fade {
 					//check control type
 					switch MIDItype {

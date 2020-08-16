@@ -128,6 +128,14 @@ type ExecWindow struct {
 	Height int    `json:"Height"`
 }
 
+// MappingRemove hold information with which to delete a mapping on UI
+type MappingRemove struct {
+	Event   string  `json:"Event"`
+	Page    int     `json:"Page"`
+	Channel int     `json:"Channel"`
+	Type    float64 `json:"Type"`
+}
+
 //GetOSCMessage returns an OSC message ready to get sent.
 /* func (o OSCOOutput) GetOSCMessage() (msg string, err error) {
 
