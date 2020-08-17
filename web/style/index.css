@@ -364,6 +364,138 @@ input[type=number] {
 }
 
 
+/* FILE SAVING */
+
+.file_body{
+  width: 100%;
+  height: 100%;
+  text-align: center;
+
+  display: grid;
+  gap: 20px;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr 2fr 16fr;
+  grid-template-areas: 
+    ". title title ." 
+    "text_l text_l text_r text_r"
+    "download_l download_l download_r download_r"
+    "left left right right";
+}
+
+.file_body>h1{
+  grid-area: title;
+  color: #e6c04f;
+  font-size: 2.2rem;
+  margin: 0;
+}
+
+.file_body .h3l {
+  color: #969AA4;
+  grid-area: text_l;
+  padding: 0;
+  margin: 0;
+}
+.file_body .h3r {
+  color: #969AA4;
+  grid-area: text_r;
+  padding: 0;
+  margin: 0;
+}
+
+.file_body .save{
+  font-size: 1.3rem;
+  padding: 20px;
+  border-radius: 4px;
+  display: flex;
+  background-color: #343A4E;
+}
+
+.file_body .save_l{
+  grid-area: download_l;
+}
+.file_body .save_r{
+  grid-area: download_r;
+}
+
+
+.file_body .drag{
+  grid-area: left;
+  padding: 20px;
+  border-radius: 4px;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #343A4E;
+  border: dashed 6px #343A4E;
+  font-size: 1.8rem;
+  color: #969AA4;
+  transition: background-color 0.2s ease-in;
+  transition: border 0.1s ease-out;
+}
+
+.file_body .dr_active{
+  /* border: dashed 6px #969AA4; */
+  background-color: #474e63;
+  border: dashed 6px #e6c04f;
+  color: #dbdee6;
+}
+
+.file_body .drag strong{
+  color: rgba(255, 255, 255, 0.904);
+}
+
+.file_body .drag strong:hover{
+  border-bottom: solid 2px #e6c04f;
+  cursor: pointer;
+}
+
+.file_body .listing{
+  grid-area: right;
+  padding: 20px;
+  border-radius: 4px;
+  flex: 1;
+  background-color: #343A4E;
+  color: #969AA4;
+  overflow-x: auto;
+}
+.file_body .listing .save_itm{
+  display: flex;
+  border-radius: 5px;
+  justify-content: space-between;
+  margin: 5px;
+  padding: 0 15px;
+  font-size: 1.6rem;
+}
+
+.file_body .listing .save_itm:hover{
+  background-color: #969AA4;
+  cursor: pointer;
+  color: #e6af2e;
+}
+
+.file_body .drag>div {
+  padding: 30px;
+}
+
+.save .icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.save input{
+  margin: 0 10px;
+}
+.save label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  color: rgba(255, 255, 255, 0.849);
+}
+
 .settings_iterf_inst {
   box-sizing: border-box;
   display: flex;

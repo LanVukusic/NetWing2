@@ -183,6 +183,21 @@ function add_exec_page(page, width, heigh) {
 
 }
 
+function downloadObjectAsJson(exportObj, exportName){
+  var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+  var downloadAnchorNode = document.createElement('a');
+  downloadAnchorNode.setAttribute("href",     dataStr);
+  downloadAnchorNode.setAttribute("download", exportName + ".json");
+  document.body.appendChild(downloadAnchorNode); // required for firefox
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+
+function loadSaveFile(obj){
+  console.log(obj);
+  window.location.reload()
+}
+
 $(
   $(".side_block").click(function () {
 
@@ -451,4 +466,50 @@ $(
     conn.send(JSON.stringify(data))
     $("#window-modal").addClass("disabled");
   }),
+
+  // drag and drop start
+  $("#drag_area").on('drag dragstart dragend dragover dragenter dragleave drop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  })
+  .on('dragover dragenter', function () {
+    $("#drag_area").addClass('dr_active');
+  })
+  .on('dragleave dragend drop', function () {
+    $("#drag_area").removeClass('dr_active');
+  }).on('drop', function (e) {
+    let droppedFiles = e.originalEvent.dataTransfer.files;
+    let reader = new FileReader()
+    reader.readAsDataURL(droppedFiles[0])
+    reader.onloadend = function () {
+      $.ajax({
+        url: reader.result,
+        success: function (data) {
+          //console.log(JSON.parse(data)); // WIP
+          loadSaveFile(JSON.parse(data))
+        },
+        error: function (request, error) {
+          cliLog(2, "Upload", "Cant upload save file")
+        }
+      });
+    }
+  }),
+
+  $('#file').change(function (event) {
+    var reader = new FileReader();
+    reader.onload = (event) => {
+      loadSaveFile(JSON.parse(event.target.result))
+    };
+    reader.readAsText(event.target.files[0]);
+  }),
+  //drag and drop end
+
+  $("#btn_save_dl").click(()=>{
+    var obj = {penis:"velik"}
+    downloadObjectAsJson(obj, $("#name_save_dl").val())
+  })
+
+
+
+
 );

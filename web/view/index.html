@@ -9,7 +9,7 @@
 <body>
   <div class="nav">
     <span class="nav_title">NetWing</span>
-    <span class="nav_author">Cuz there's no such thing as "too much faders"!</span>
+    <span class="nav_author">Project: <i>Fristproj</i>    Last saved: <i>19:30</i></span>
   </div>
 
 
@@ -17,12 +17,12 @@
     <div class="side_block block_active">Interfaces</div>
     <div class="side_block">Faders</div>
     <div class="side_block">Execs</div>
+    <div class="side_block">File</div>
     <!-- <div class="side_block">Views</div>
       <div class="side_block">Users</div> -->
   </div>
 
   <div class="main">
-
     <div class="main_window main_interfaces">
       <div class="interfaces_workplace doted" id="interface-space">
         <div class="settings_nav">
@@ -75,7 +75,7 @@
       </div>
     </div>
 
-    <div class="main_window main_interfaces main_execs">
+    <div class="main_window main_interfaces main_execs disabled">
 
       <div class="execs_down">
         <span class="execs_scroll_label">Page select</span>
@@ -89,6 +89,130 @@
 
       <!-- here are the exec pages -->
 
+    </div>
+
+    <div class="main_window main_file disabled">
+      <div class="file_body">
+        <h1>Save & load </h1>
+
+        <h3 class="h3l">Client side save & load</h3>
+        <div class="save save_l">      
+          <label for="">
+            <span>Download file:</span>
+            <input type="text" placeholder="File name" id="name_save_dl">
+          </label>
+          <div class="icon">
+            <button id="btn_save_dl">Save</button>
+          </div>
+
+        </div>
+        <div class="drag" id="drag_area">
+          <div>
+            <input class="box_file disabled" type="file" name="files[]" id="file" data-multiple-caption="{count} files selected" multiple />
+            <label for="file"><strong>Choose save file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
+
+          </div>
+        </div>
+  
+        <h3 class="h3r">Save & load server side</h3>
+        <div class="save save_r">
+          <label for="">
+            <span>Save on server:</span>
+            <input type="text" placeholder="File name">
+          </label>
+          <div class="icon">
+            <button>Save</button>
+          </div>
+        </div>
+        <div class="listing">
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+            <span>Load</span>
+          </div>
+           
+          
+        </div>
+          
+      </div>
     </div>
 
   </div>
