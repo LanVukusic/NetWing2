@@ -15,11 +15,11 @@ function addInterfaceInstance(id, Hname, FriendlyName) {
 
 function addFaderInstance(fader_channel, midi_chan) {
   USED_FADER_IDS.push(parseInt(fader_channel));
-  $(".faders_holder").append('<div class="fader" style="order:' + fader_channel + '"><button id="fader-edit-button">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader' + fader_channel + '"><div><span><span>MIDI:</span><i id="fader-label-midi">' + midi_chan + '</i></span><span>Exec:<i id="fader-label-exec">' + fader_channel + '</i></span></div></div>');
+  $(".faders_holder").append('<div class="fader" style="order:' + fader_channel + '"><button id="fader-edit-button" onclick="faderEdit(this)">edit</button><input disabled="" type="range" orient="vertical" max="127" min="0" class="slider" id="fader' + fader_channel + '"><div><span><span>MIDI:</span><i id="fader-label-midi">' + midi_chan + '</i></span><span>Exec:<i id="fader-label-exec">' + fader_channel + '</i></span></div></div>');
 }
 
 function updateExecInstance(fader_channel, exec_page, midi_chan) {
-  $("#exec_page_"+ exec_page).find("div[itemid='" + fader_channel + "']").find("#exec_mapping").html(midi_chan);
+  $("#exec_page_" + exec_page).find("div[itemid='" + fader_channel + "']").find("#exec_mapping").html(midi_chan);
   $("#exec_page_" + exec_page).find("#exec_item" + fader_channel).attr("isset", "1")
   $(".modal_execs").addClass("disabled");
 }
@@ -30,7 +30,7 @@ function clearDevices() {
 
 function cliLog(level, type, msg) {
   let time = new Date()
-  let timeFormatted = time.getHours() + ":" + time.getMinutes() + ":" + time.getSeconds() + "." + time.getMilliseconds().toString()
+  let timeFormatted = time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0') + ":" + time.getSeconds().toString().padStart(2, '0') + "." + time.getMilliseconds().toString().padStart(3, '0')
   let cli = $("#cliLog")
   let message = $('<div class="cli_line"><div class="cli_time_stamp">' + timeFormatted + '</div><div class="cli_type">' + type + '</div><div class="cli_body">' + msg + '</div></div>');
 
@@ -48,9 +48,20 @@ function cliLog(level, type, msg) {
   cli.scrollTop(cli.prop("scrollHeight"))
 }
 
+function faderEdit(elem) {
+  let faderID = $(elem).parent().find('#fader-label-exec').html();
+  let faderMIDI = $(elem).parent().find('#fader-label-midi').html();
+  $("#fader_span_title").html(" : " + faderID);
+  $("#fader_input_num").val(faderID);
+  $("#fader_label_status").html("mapped");
+  $("#fader_label_midi_chn").html(faderMIDI);
+  $("#fader-update-button").html("update").attr("disabled", true);
+  $("#fader-remove-button").removeClass("disabled").attr("disabled", false)
+  $("#faders-modal").removeClass("disabled");
+}
+
 function updateMIDItable(data) {
   //populate ins
-
   if (data.Ins == null) {
     $("#TableMidiIns").empty();
     $("#TableMidiIns").append('<div class="deviceTableDevice" ><div>No devices found</div></div>');
@@ -165,7 +176,7 @@ function add_exec_page(page, width, heigh) {
     $(obj).removeClass("page_holder_active")
   });
 
-  let page_change_button = $('<div class="page_holder page_holder_active" id="page_button_'+ page +'">' + page + '</div>')
+  let page_change_button = $('<div class="page_holder page_holder_active" id="page_button_' + page + '">' + page + '</div>')
   page_change_button.click(change_exec_page)
   $(".execs_scrollbar").append(page_change_button)
 
@@ -207,10 +218,8 @@ $(
     data = JSON.stringify(data)
     conn.send(data)
     console.log(data);
-    
+
   }),
-
-
 
   $("#addInterfaceGenericMIDI").click(function () {
     $(".modal_interfaces").removeClass("disabled");
@@ -301,14 +310,17 @@ $(
     $("#faders-modal").removeClass("disabled");
   }),
 
-  $("#fader-edit-button").click(function () {
-    let faderID = $(this).parent().find('#fader-label-exec').html();
-    let faderMIDI = $(this).parent().find('#fader-label-midi').html();
-    $("#fader_span_title").html(" : " + faderID);
-    $("#fader_input_num").val(faderID);
-    $("#fader_label_status").html("mapped");
-    $("#fader_label_midi_chn").html(faderMIDI);
-    $("#faders-modal").removeClass("disabled");
+  $("#fader-remove-button").click(function () {
+    let page = 0; // TO DO
+    let faderId = $("#fader_input_num").val();
+
+    data = {
+      event: "removeMapping",
+      extChn: parseInt(faderId),
+      execPage: page,
+      extType: 0, // 0 = fader, 3 = exec
+    }
+    conn.send(JSON.stringify(data));
   }),
 
   $("#fader-update-button").click(function () {
@@ -323,12 +335,12 @@ $(
     }
 
     data = {
-      event: "bindMIDIchannel",  // type of event
+      event: "bindMIDIchannel", // type of event
       device: Math.floor(parseInt(midi_chan)), // number of midi device, basically a device id
-      chn: parseInt(midi_chan.split('.')[1]),  // MIDI channel
-      extChn: parseInt(fader_channel),  // number of fader to controll
-      execPage: 0,  // fader page
-      typeFader: true,  // should it fade or snap
+      chn: parseInt(midi_chan.split('.')[1]), // MIDI channel
+      extChn: parseInt(fader_channel), // number of fader to controll
+      execPage: 0, // fader page
+      typeFader: true, // should it fade or snap
       extType: 0 // 0 = fader, 3 = exec
     }
 
@@ -346,8 +358,6 @@ $(
     }
     conn.send(JSON.stringify(data));
   }),
-
-  /*  EXECS STUFF */
 
   $("#exec-learn-button").click(function () {
     // transmit the listening mode to the server
@@ -392,7 +402,7 @@ $(
       event: "removeMapping",
       extChn: parseInt(execId),
       execPage: page,
-      extType: 3, // 0 = fader, 4 = exec
+      extType: 3, // 0 = fader, 3 = exec
     }
     conn.send(JSON.stringify(data));
   }),
@@ -409,11 +419,24 @@ $(
     let window = $("#exec_window_win").val();
     let page = parseInt($("#exec_window_page").val());
 
+    if (window == "" || page == "") {
+      $("#exec-win-exists-error").html("No fields can be left empty.").removeClass("disabled")
+      return
+    }
+    if (parseInt(page) == NaN) {
+      $("#exec-win-exists-error").html("Page input is not valid.").removeClass("disabled")
+      return
+    }
+    if (Number.isNaN(parseInt(window.split("/")[0])) || Number.isNaN(parseInt(window.split("/")[1]))) {
+      $("#exec-win-exists-error").html("Windows size input is not valid.").removeClass("disabled")
+      return
+    }
+
     if (USED_EXEC_PAGES.includes(page)) {
       // user is naughty and wants to add an existing page
-      $("#exec-win-exists-error").removeClass("disabled");
+      $("#exec-win-exists-error").html("This page number already exists.").removeClass("disabled")
       return
-    }else{
+    } else {
       $("#exec-win-exists-error").addClass("disabled");
     }
 
@@ -424,9 +447,8 @@ $(
       height: parseInt(window.split("/")[1])
     }
 
+    //console.log(parseInt(window.split("/")[0]), parseInt(window.split("/")[1]), "penis penis")
     conn.send(JSON.stringify(data))
-
     $("#window-modal").addClass("disabled");
   }),
-
 );

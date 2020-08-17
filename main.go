@@ -288,8 +288,15 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		//check the validity of mapping. two inputs cant be on same out and vice versa.
 		for key, val := range mappings {
 			if key.ChannelID == tempKey.ChannelID && key.DeviceID == tempKey.DeviceID {
+				str := ""
+				if val.OutType == 3 {
+					str = "exec"
+				}
+				if val.OutType == 0 {
+					str = "fader"
+				}
 				// this midi channel is in use
-				cliLog("Mapping", "MIDI channel is already used on the "+"str"+": "+fmt.Sprintf("%v", val.OutChan)+", page:"+fmt.Sprintf("%v", val.OutPage), 1)
+				cliLog("Mapping", "MIDI channel is already used on the "+str+": "+fmt.Sprintf("%v", val.OutChan)+", page:"+fmt.Sprintf("%v", val.OutPage), 1)
 				return
 			}
 			if val.OutType == tempVal.OutType && val.OutChan == tempVal.OutChan && val.OutPage == tempVal.OutPage {
@@ -337,10 +344,6 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 }
 
 func removeMapping(channel int, page int, typ float64) {
-	fmt.Println(channel, page, typ)
-	fmt.Println(mainmappings)
-	fmt.Println(mappings)
-
 	for key, element := range mappings {
 		if element.OutType == typ && element.OutPage == page && element.OutChan == channel {
 			delete(mappings, key)
@@ -354,6 +357,9 @@ func removeMapping(channel int, page int, typ float64) {
 			return
 		}
 	}
+
+	cliLog("mapping", fmt.Sprintf("Can't remove mapping MIDI:%d Page:%d", channel, page), 1)
+	return
 }
 
 func broadcastMessage(msg interface{}) {
@@ -503,7 +509,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 
 			switch tempOut.OutType {
 			case 0:
-				fmt.Println("BOUND FEJDR")
+
 				temp := helpers.FaderUpdate{
 					Event:   "UpdateFader",
 					Type:    0,
@@ -517,7 +523,7 @@ func handleMidiEvent(in []byte, time int64, deviceID int) {
 				break
 			case 3:
 				// check if it's a button
-				fmt.Println("BOUND EGZEK")
+
 				var out int
 				if !tempOut.Fade {
 					//check control type
