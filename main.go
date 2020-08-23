@@ -35,14 +35,11 @@ var boxStyle packr.Box
 var boxStatic packr.Box
 var boxJs packr.Box
 
-// main mapping dictionary
-var mainmappings map[helpers.InterfaceMessage]int
-
 // main device array. supports max of 50 devices
-var mainDeviceList [50]helpers.InterfaceDevice
+var mainDeviceList []helpers.InterfaceDevice
 
 // mapped interfaces and their bind ids.
-var midi2idMappings [50]helpers.Bind2MIDI
+var midi2idMappings []helpers.Bind2MIDI
 
 // MIDI stuff
 var drvMIDI connect.Driver
@@ -68,8 +65,6 @@ func main() {
 	boxView = packr.NewBox("./web/view")
 	boxStatic = packr.NewBox("./web/")
 
-	mainmappings = make(map[helpers.InterfaceMessage]int)
-
 	// start services
 	fmt.Println("locking Threads")
 	runtime.LockOSThread()
@@ -85,33 +80,26 @@ func main() {
 // helper functions and whatnot
 func loopCheck() {
 	devices, _ := getMIDIDevices(&drvMIDI)
-
 	// check for inputs
 	ins := devices.Ins
-
-	for i := range midi2idMappings { // search through all added interfaces
-		if midi2idMappings[i].MidiPort == nil { // check if we are out of interfaces
-			break
-		}
-		/* fmt.Println(ins)
-		fmt.Println(addedIterf[]) */
-
+	//fmt.Println(devices, mainDeviceList)
+	for i := range mainDeviceList {
 		var enabled = false
-
-		for _, allIterf := range ins { // compare the added interface t osee if you can see it in available device list
-			if midi2idMappings[i].MidiPort.String() == allIterf.NameWithID { // we found an added device in our connected list
+		for _, allIterf := range ins {
+			if mainDeviceList[i].HardwareName == allIterf.Name {
+				//fmt.Println(mainDeviceList[i].HardwareName, allIterf.Name, "penis")
 				enabled = true
-				if !midi2idMappings[i].WasOnline { // device was previously disconnected so we have to reconnect it back
-					ListenMidi(&drvMIDI, allIterf.ID, midi2idMappings[i].BindID, false)
-					midi2idMappings[i].WasOnline = true
+				if !mainDeviceList[i].Active {
+					cliLog("MIDI", fmt.Sprintf("Reconnecting device: %s", mainDeviceList[i].HardwareName), 0)
+					ListenMidi(&drvMIDI, mainDeviceList[i].HardwareID, mainDeviceList[i].BindID, false)
+					mainDeviceList[i].Active = true
 				}
-				break
 			}
 		}
 		if !enabled { // device was not found in active interfaces therefore it is disconnected
-			if midi2idMappings[i].WasOnline { // if device was not disconnected before this function call
-				cliLog("MIDI", fmt.Sprintf("Device disconnected: %s", midi2idMappings[i].MidiPort), 2)
-				midi2idMappings[i].WasOnline = false // mark it as disconnected device
+			if mainDeviceList[i].Active { // if device was not disconnected before this function call
+				cliLog("MIDI", fmt.Sprintf("Device not connected: %s", mainDeviceList[i].HardwareName), 2)
+				mainDeviceList[i].Active = false // mark it as disconnected device
 			}
 		}
 	}
@@ -208,53 +196,8 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		break
 
 	case "addInterface":
-		devType := int(raw["deviceType"].(float64))
+		addInterface(int(raw["deviceType"].(float64)), fmt.Sprintf("%v", raw["HardwareName"]), fmt.Sprintf("%v", raw["FriendlyName"]), int(raw["inDevice"].(float64)))
 
-		if devType == 0 { // it is a MIDI device
-			var id int
-			id = 100
-			// add device to main device list
-			for i, interf := range mainDeviceList {
-				if !interf.Active {
-					id = i
-					// free space in our device array
-					mainDeviceList[i] = helpers.InterfaceDevice{
-						Active:       true,
-						BindID:       id, // that's the id for the device on the backend. not to be confused with midi ID
-						DeviceType:   0,
-						HardwareName: fmt.Sprintf("%v", raw["HardwareName"]),
-						FriendlyName: fmt.Sprintf("%v", raw["FriendlyName"])}
-					break
-				} else {
-					if interf.HardwareName == raw["HardwareName"] {
-						// device allready exists
-						cliLog("MIDI", "Midi device already active", 1)
-						return
-					}
-				}
-			}
-
-			if id > 50 {
-				cliLog("Device level reached", "You have too many active devices.", 1)
-				return
-			}
-
-			// handle its inputs / outputs
-			ListenMidi(&drvMIDI, int(raw["inDevice"].(float64)), id, true)
-			hName := fmt.Sprintf("%v", raw["HardwareName"])
-			fName := fmt.Sprintf("%v", raw["FriendlyName"])
-			sID := strconv.Itoa(id)
-
-			fmt.Println(sID)
-			data := helpers.WSMsgTemplate{
-				Event: "UiAddDevice",
-				Data:  "{'ID':'" + sID + "','Hname':'" + hName + "','FriendlyName':'" + fName + "'}",
-			}
-
-			// update the UI
-			broadcastMessage(data)
-
-		}
 	case "bindMIDIchannel":
 		// future me will be thankful: https://blog.golang.org/maps
 
@@ -308,7 +251,6 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 		}
 
 	case "addNewPage":
-
 		temp := helpers.ExecWindow{
 			Event:  "newExecPage",
 			Page:   int(raw["page"].(float64)),
@@ -326,8 +268,125 @@ func handleWSMessage(messageType int, p []byte, socket *websocket.Conn) {
 
 	case "removeMapping":
 		removeMapping(int(raw["extChn"].(float64)), int(raw["execPage"].(float64)), raw["extType"].(float64))
-	}
 
+	case "saveRequest":
+		if raw["type"].(string) == "local" {
+			temp := helpers.SingleData{
+				Event: "saveReturn",
+				JSN:   fmt.Sprintf(generateSaveJSON()),
+			}
+			socket.WriteJSON(temp)
+			fmt.Println()
+		}
+	case "loadSave":
+		mainDeviceList = []helpers.InterfaceDevice{}
+		exec_pages = []helpers.ExecWindow{}
+		midi2idMappings = []helpers.Bind2MIDI{}
+		mappings = map[helpers.InternalDevice]helpers.InternalOutput{}
+
+		for key, element := range raw["data"].(map[string]interface{}) {
+			//fmt.Println(key, element)
+			switch key {
+			case "mappings": // all mappings map - needs to be proccesed seperately
+				mappings = make(map[helpers.InternalDevice]helpers.InternalOutput)
+				elem := element.([]interface{})
+				for i := range elem {
+					keyMaping := elem[i].(map[string]interface{})
+					temp1 := keyMaping["Key"].(map[string]interface{})
+					temp2 := keyMaping["Val"].(map[string]interface{})
+
+					tempKey := helpers.InternalDevice{
+						InterfaceType: int(temp1["InterfaceType"].(float64)),
+						DeviceID:      int(temp1["DeviceID"].(float64)),
+						ChannelID:     byte(temp1["ChannelID"].(float64)),
+					}
+					tempVal := helpers.InternalOutput{
+						OutType: temp2["OutType"].(float64), // 3 is an EXEC, 0 is fader
+						OutChan: int(temp2["OutChan"].(float64)),
+						OutPage: int(temp2["OutPage"].(float64)),
+						Fade:    temp2["Fade"].(bool),
+					}
+					mappings[tempKey] = tempVal
+				}
+				break
+
+			case "exec_pages": // execs  list - jst copies all the values
+				elem := element.([]interface{})
+				for i := range elem {
+					page := elem[i].(map[string]interface{})
+					temp := helpers.ExecWindow{
+						Event:  page["Event"].(string),
+						Page:   int(page["Page"].(float64)),
+						Width:  int(page["Width"].(float64)),
+						Height: int(page["Height"].(float64)),
+					}
+					exec_pages = append(exec_pages, temp)
+				}
+				break
+
+			case "mainDeviceList": // devices  list - reads all devices and tries to initialize them
+				elem := element.([]interface{})
+				for i := range elem {
+					page := elem[i].(map[string]interface{})
+					addInterface(int(page["DeviceType"].(float64)), page["HardwareName"].(string), page["FriendlyName"].(string), int(page["HardwareID"].(float64)))
+				}
+				break
+
+			}
+		}
+
+		cliLog("Load", "Load successfull. Reload the page.", 0)
+	}
+}
+
+func addInterface(devType int, hardwareNameI string, firendlyNameI string, inDev int) {
+	if devType == 0 { // it is a MIDI device
+		device := helpers.InterfaceDevice{
+			Active:       true,
+			BindID:       len(mainDeviceList), // that's the id for the device on the backend. not to be confused with midi ID
+			DeviceType:   0,
+			HardwareName: hardwareNameI,
+			FriendlyName: firendlyNameI}
+
+		mainDeviceList = append(mainDeviceList, device)
+
+		// handle its inputs / outputs
+		ListenMidi(&drvMIDI, inDev, len(mainDeviceList), true)
+		sID := strconv.Itoa(len(mainDeviceList))
+
+		//fmt.Println(sID)
+		data := helpers.WSMsgTemplate{
+			Event: "UiAddDevice",
+			Data:  "{'ID':'" + sID + "','Hname':'" + hardwareNameI + "','FriendlyName':'" + firendlyNameI + "'}",
+		}
+
+		// update the UI
+		broadcastMessage(data)
+	}
+}
+
+func generateSaveJSON() string {
+	// mappings
+	jsonSave := "{ \"mappings\":["
+	for key, element := range mappings {
+		keyJSON, _ := json.Marshal(key)
+		valJSON, _ := json.Marshal(element)
+		jsonSave += fmt.Sprintf("{\"Key\": %s, \"Val\": %s},", keyJSON, valJSON)
+	}
+	jsonSave = strings.TrimRight(jsonSave, ",")
+
+	// exec_pages
+	jsonSave += "], \"exec_pages\":"
+	execPages, _ := json.Marshal(exec_pages)
+	jsonSave += fmt.Sprintf("%s", execPages)
+
+	// mainDeviceList
+	jsonSave += ", \"mainDeviceList\":"
+	mainDeviceJSON, _ := json.Marshal(mainDeviceList)
+	jsonSave += fmt.Sprintf("%s", mainDeviceJSON)
+
+	jsonSave += "}"
+	return jsonSave
 }
 
 func removeMapping(channel int, page int, typ float64) {
@@ -607,26 +666,19 @@ func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err erro
 	//handles the potential error
 	if err != nil { // if error exists, handle it and return
 		handleErr(err, "MIDI device:"+string(id)+"is unavailable", true)
-		if in.IsOpen() {
-			in.Close()
-		}
-		return err
+
 	}
 
+	// add device to monitroring array
+	device := helpers.Bind2MIDI{ // assign it the object with the device
+		BindID:    bind,
+		MidiPort:  in,
+		WasOnline: true}
+
+	midi2idMappings = append(midi2idMappings, device)
+
 	//if the device is successfully opened it tries to attach a listener
-	if in.IsOpen() {
-		//add a binding to the monitoring array.
-		if newDevice {
-			for i, interf := range midi2idMappings {
-				if interf.MidiPort == nil { // finds the first empty entry in an array
-					midi2idMappings[i] = helpers.Bind2MIDI{ // assign it the object with the device
-						BindID:    bind,
-						MidiPort:  in,
-						WasOnline: true}
-					break
-				}
-			}
-		}
+	if err == nil {
 
 		// set a listener to the device
 		err := in.SetListener(handleMidiEvent)
@@ -647,7 +699,6 @@ func ListenMidi(drv *connect.Driver, id int, bind int, newDevice bool) (err erro
 	}
 	cliLog("MIDI", "Midi device is not open", 2)
 	return nil
-
 }
 
 //StopListenMidi checks availability and DETACHES a MIDI listener from the device

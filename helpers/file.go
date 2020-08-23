@@ -2,13 +2,7 @@ package helpers
 
 import (
 	"github.com/gomidi/connect"
-	"github.com/zserge/webview"
 )
-
-// Alert creates an "alert" windows on the UI
-func Alert(w webview.WebView, text string) {
-	w.Eval("alert('" + text + "')")
-}
 
 //MidiDevice is a holder for a midi device that gets sent from BEnd to UI
 type MidiDevice struct {
@@ -26,12 +20,12 @@ type MidiPackage struct {
 
 //InterfaceDevice holds a reference to a device that user assigns. It can be any type of interface that will potentially get mapped.
 type InterfaceDevice struct {
-	Active       bool
-	BindID       int   // device ID for internal binding. Unique for every interface
-	DeviceType   int16 // 0 = MIDI
-	HardwareName string
-	FriendlyName string
-	HardwareID   int // let's say 0 as in first midi device
+	Active       bool   `json:"Active"`
+	BindID       int    `json:"BindID"`     // device ID for internal binding. Unique for every interface
+	DeviceType   int16  `json:"DeviceType"` // 0 = MIDI
+	HardwareName string `json:"HardwareName"`
+	FriendlyName string `json:"FriendlyName"`
+	HardwareID   int    `json:"HardwareID"` // let's say 0 as in first midi device
 }
 
 //InterfaceMessage is an incoming message from any device interface. It serves as the key in the interface - OSC mapping.
@@ -79,17 +73,17 @@ type MIDILearnMessage struct {
 
 //InternalDevice is used as a key in mappings HashMap. it tells us the interface, device, and channel
 type InternalDevice struct {
-	InterfaceType int // MIDI = 0
-	DeviceID      int
-	ChannelID     byte
+	InterfaceType int  `json:"InterfaceType"` // MIDI = 0
+	DeviceID      int  `json:"DeviceID"`
+	ChannelID     byte `json:"ChannelID"`
 }
 
 //InternalOutput is used as a value in mappings hashmap. it tells what value and type of data should be processed
 type InternalOutput struct {
-	OutType float64
-	OutChan int
-	OutPage int
-	Fade    bool
+	OutType float64 `json:"OutType"`
+	OutChan int     `json:"OutChan"`
+	OutPage int     `json:"OutPage"`
+	Fade    bool    `json:"Fade"`
 }
 
 //MappingResponse is sent back to the client, to confirm that the interface is bound
@@ -136,7 +130,8 @@ type MappingRemove struct {
 	Type    float64 `json:"Type"`
 }
 
-//GetOSCMessage returns an OSC message ready to get sent.
-/* func (o OSCOOutput) GetOSCMessage() (msg string, err error) {
-
-} */
+// SingleData hold the save file json
+type SingleData struct {
+	Event string `json:"Event"`
+	JSN   string `json:"JSN"`
+}

@@ -194,8 +194,13 @@ function downloadObjectAsJson(exportObj, exportName){
 }
 
 function loadSaveFile(obj){
-  console.log(obj);
-  window.location.reload()
+  //console.log(obj);
+  let data = {
+    event: "loadSave",
+    data: obj
+  }
+  data = JSON.stringify(data)
+  conn.send(data)
 }
 
 $(
@@ -434,7 +439,7 @@ $(
     let window = $("#exec_window_win").val();
     let page = parseInt($("#exec_window_page").val());
 
-    if (window == "" || page == "") {
+    if (window == "" || page == "" || Number.isNaN(page)) {
       $("#exec-win-exists-error").html("No fields can be left empty.").removeClass("disabled")
       return
     }
@@ -479,20 +484,11 @@ $(
     $("#drag_area").removeClass('dr_active');
   }).on('drop', function (e) {
     let droppedFiles = e.originalEvent.dataTransfer.files;
-    let reader = new FileReader()
-    reader.readAsDataURL(droppedFiles[0])
-    reader.onloadend = function () {
-      $.ajax({
-        url: reader.result,
-        success: function (data) {
-          //console.log(JSON.parse(data)); // WIP
-          loadSaveFile(JSON.parse(data))
-        },
-        error: function (request, error) {
-          cliLog(2, "Upload", "Cant upload save file")
-        }
-      });
-    }
+    var reader = new FileReader();
+    reader.onload = (event) => {
+      loadSaveFile(JSON.parse(event.target.result))
+    };
+    reader.readAsText(droppedFiles[0]);
   }),
 
   $('#file').change(function (event) {
@@ -505,8 +501,11 @@ $(
   //drag and drop end
 
   $("#btn_save_dl").click(()=>{
-    var obj = {penis:"velik"}
-    downloadObjectAsJson(obj, $("#name_save_dl").val())
+    data = {
+      event: "saveRequest",
+      type: "local" 
+    }
+    conn.send(JSON.stringify(data))
   })
 
 

@@ -77,8 +77,10 @@ if (window["WebSocket"]) {
           $("#fader" + evt.Channel).parent().remove();
           $("#faders-modal").addClass("disabled");
         }
-
         cliLog(0, "Mapping", "Mapping removed successfuly")
+      
+      case "saveReturn":
+        downloadObjectAsJson(JSON.parse(evt.JSN), $("#name_save_dl").val())
     }
   }
 } else {
