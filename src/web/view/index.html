@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<head>
+  <link rel="stylesheet" href="/assets/style/index.css">
+  <link rel="stylesheet" href="../style/index.css">
+
+</head>
+
+<body>
+  <div class="nav">
+    <span class="nav_title">NetWing</span>
+    <span class="nav_author">TESTNI BUILD, Wish you luck koalavoici</span>
+  </div>
+
+
+  <div class="side">
+    <div class="side_block block_active">Interfaces</div>
+    <div class="side_block">Faders</div>
+    <div class="side_block">Execs</div>
+    <div class="side_block">File</div>
+    <!-- <div class="side_block">Views</div>
+      <div class="side_block">Users</div> -->
+  </div>
+
+  <div class="main">
+    <div class="main_window main_interfaces">
+      <div class="interfaces_workplace doted" id="interface-space">
+        <div class="settings_nav">
+          <span>Active interfaces</span>
+          <!--  <span>+</span> -->
+        </div>
+
+        <!-- The place where interface instances are added -->
+
+      </div>
+      <div class="interfaces_settings doted">
+        <div class="settings_nav settings_right">
+          Interface settings
+          <div>
+            Add wanted interface
+          </div>
+        </div>
+
+        <div class="settings_iterf_inst">
+          <div class="add_front" id="addInterfaceGenericMIDI">
+            +
+          </div>
+          <div class="add_back">
+            Generic MIDI
+          </div>
+        </div>
+
+        <div class="settings_iterf_inst">
+          <div class="add_front" id="addInterfaceOSC">
+            +
+          </div>
+          <div class="add_back">
+            OSC: <input type="text" id="OSC_ip_add">
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="main_window main_faders disabled">
+      <div class="interfaces_workplace doted execs_workplace">
+
+        <div class="settings_nav">
+          <span>Active faders</span>
+          <span id="execs-add-fader">[A]dd</span>
+        </div>
+        <div class="faders_holder">
+          <!-- there be faders -->
+        </div>
+      </div>
+    </div>
+
+    <div class="main_window main_interfaces main_execs disabled">
+
+      <div class="execs_down">
+        <span class="execs_scroll_label">Page select</span>
+        <div class="execs_plus">+</div>
+        <div class="execs_scrollbar">
+          
+          <!-- here are the page buttons -->
+
+        </div>
+      </div>
+
+      <!-- here are the exec pages -->
+
+    </div>
+
+    <div class="main_window main_file disabled">
+      <div class="file_body">
+        <h1>Save & load </h1>
+
+        <h3 class="h3l">Client side save & load</h3>
+        <div class="save save_l">      
+          <label for="">
+            <span>Download save file:</span>
+            <input type="text" placeholder="File name" id="name_save_dl">
+          </label>
+          <div class="icon">
+            <button id="btn_save_dl">Save</button>
+          </div>
+
+        </div>
+        <div class="drag" id="drag_area">
+          <div>
+            <input class="box_file disabled" type="file" name="files[]" id="file" data-multiple-caption="{count} files selected" multiple />
+            <label for="file"><strong>Choose save file</strong><span class="box__dragndrop"> or drag it here</span>.</label>
+
+          </div>
+        </div>
+  
+        <h3 class="h3r"><!-- Save & load server side --> OW NE TIKAT MAJMUN! NE RADI</h3>
+        <div class="save save_r">
+          <label for="">
+            <span>Save on server:</span>
+            <input type="text" placeholder="File name">
+          </label>
+          <div class="icon">
+            <button>Save</button>
+          </div>
+        </div>
+        <div class="listing">
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          <div class="save_itm">
+            <span>First save</span>
+            <span>12.07.2020 14.02</span>
+          </div>
+         
+          
+        </div>
+          
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cli" id="cliLog">
+  </div>
+  <div class="cli_tools">
+    <button id="cli_clear">Clear</button>
+    <button id="test">Autoscroll</button>
+  </div>
+
+
+  <div class="modal disabled modal_interfaces">
+    <div class="window">
+      <div class="modalNav">
+        <div>Settings</div>
+        <div id="closeModalInterf" class="navBtn">[Esc]</div>
+      </div>
+      <div class="modalBody">
+        <span>Generic MIDI</span>
+        <div class="name">
+          <span>Device display name</span>
+          <input type="text" id="dDisplayName" value="New MIDI device">
+        </div>
+        <div class="devList">
+          <div class="devicesTable">
+            <div class="devicesTableTitle">Set input device</div>
+            <div class="devicesTableBody" id="TableMidiIns">
+              <!-- devices go in here -->
+            </div>
+          </div>
+          <div class="devicesTable outs">
+            <div class="devicesTableTitle">Set output device</div>
+            <div class="devicesTableBody" id="TableMidiOuts">
+              <!-- devices go in here -->
+            </div>
+
+
+          </div>
+        </div>
+
+        <div class="name disabled" id="noDeviceAlert">
+          <span>Please select device first</span>
+        </div>
+
+        <div>
+          <button id="RefreshDevice">
+            [R]efresh
+          </button>
+          <button id="applyDevice">
+            [A]pply
+          </button>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="modal disabled modal_faders " id="faders-modal">
+    <div class="window window_execs">
+      <div class="modalNav">
+        <div>Fader
+          <span id="fader_span_title">:10</span>
+        </div>
+        <div id="closeModal" class="navBtn">[Esc]</div>
+      </div>
+      <div class="modalBody">
+        <span>Fader settings</span>
+        <i class="fader-exists-error disabled" id="fader-exists-error">Fader with that id already exists</i>
+        <div class="execs_settings_table">
+          <div class="left">
+            <span>Fader:<input type="number" min="0" id="fader_input_num" value="0"></span>
+            <br>
+            <span>MIDI in: <i></i> <label id="fader_label_midi_chn">/</label> </span>
+            <br>
+            <span>status: <i><label id="fader_label_status">unmapped</label></i></span>
+          </div>
+          <div class="right">
+            <button id="fader-learn-button">Learn</button>
+            <button id="fader-update-button" disabled>Update</button>
+            <button id="fader-remove-button" disabled>Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal disabled modal_execs " id="execs-modal">
+    <div class="window window_execs">
+      <div class="modalNav">
+        <div>Exec:
+          <span id="exec_span_title">10</span>
+        </div>
+        <div id="closeModalExecs" class="navBtn">[Esc]</div>
+      </div>
+      <div class="modalBody">
+        <span>Exec settings</span>
+        <i id="exec-exists-error"></i>
+        <div class="execs_settings_table">
+          <div class="left">
+            <div class="execs_settings_border">
+              <label class="pointer">
+                <input class="pointer" type="radio" id="fader_radio" name="exec_type" value="fader" checked="checked">
+                Fader
+              </label>
+              <br>
+              
+              <label class="pointer">
+                <input class="pointer" type="radio" name="exec_type" value="button">
+                Button
+              </label>
+              <br>
+
+            </div>
+            <div class="execs_settings_border">
+              
+              <label class="pointer">
+                <input class="pointer" type="checkbox" id="midiOut" name="Respond" value="Respond">
+                enable MIDI out WIP
+              </label>
+            </div>
+            <br>
+            <span>In:<label id="exec_label_midi_chn"></label></span>
+            <br>
+            <span>status: <i><label id="exec_label_status"></label></i></span>
+          </div>
+          <div class="right">
+            <button id="exec-learn-button">Learn</button>
+            <button id="exec-update-button" disabled>Update</button>
+            <button id="exec-remove-button" disabled>Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal disabled modal_window  " id="window-modal">
+    <div class="window window_window">
+      <div class="modalNav">
+        <div>Add page
+        </div>
+        <div id="closeModalWindow" class="navBtn">[Esc]</div>
+      </div>
+
+      <div class="modalBody body_window">
+        <div>
+          <i>Enter window in format {width}/{height}</i>
+          <!-- leave the class it works for fader as well as for exec -->
+          <br>
+          <i class="fader-exists-error disabled" id="exec-win-exists-error">Page with that number already exists</i>
+          <div>
+            <input type="text" placeholder="8/4" id="exec_window_win">
+            <span> Page:<input type="number" placeholder="1" id="exec_window_page"></span>
+          </div>
+          <button id="button_add_window">add page</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+<script src="/assets/static/jquerry.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/web-socket-js/1.0.0/web_socket.js"></script>
+<script src="/assets/js/index.js"></script>
+<script src="/assets/js/rpc.js"></script>
+
+<!-- <script src="../static/jquerry.js"></script>
+<script src="../js/index.js"></script>
+<script src="../js/rpc.js"></script> -->
+
+</html>
